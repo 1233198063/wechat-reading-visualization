@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>微信读书 · 丹青阅览</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  /* 根字号随视口宽度线性缩放：1280px→15px，1920px→18px，超大屏封顶 */
+  html { font-size: clamp(15px, 1.05vw, 20px); }
+
+  :root {
+    --bg:       #eff4ee;
+    --surface:  #fafcf9;
+    --surface2: #e6ede5;
+    --border:   #c4d2bf;
+    --accent:   #6b9c72;
+    --accent2:  #4a7a54;
+    --ink:      #2a3828;
+    --text:     #2a3828;
+    --text-dim: #7d9680;
+    --gold:     #a8803a;
+    --rust:     #9e5a3a;
+    --shadow:   0 2px 16px rgba(42,56,40,0.08);
+    --radius:   12px;
+    --font-display: 'Ma Shan Zheng', 'Noto Serif SC', 'Source Han Serif SC', 'STSong', serif;
+    --font-body:    'Noto Serif SC', 'Source Han Serif SC', 'STSong', 'SimSun', serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    font-size: 1rem;          /* 跟随 html 根字号 */
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ──────────────────── 水墨装饰 SVG ──────────────────── */
+  .ink-deco {
+    position: absolute; pointer-events: none;
+    opacity: 0.13;
+  }
+
+  /* ──────────────────── 登录页 ──────────────────── */
+  #login-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 70% 60% at 80% 15%, #d4e6d4 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 10% 90%, #c8ddc8 0%, transparent 50%),
+      var(--bg);
+  }
+
+  /* 水墨竹叶背景装饰 */
+  #login-screen .ink-deco { top: 0; right: 0; width: 320px; height: 320px; opacity: 0.10; }
+
+  .login-seal {
+    width: clamp(72px, 5.5vw, 96px);
+    height: clamp(72px, 5.5vw, 96px);
+    border: 2px solid var(--rust);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    margin-bottom: 1.8rem;
+    position: relative;
+    background: rgba(158,90,58,0.04);
+  }
+  .login-seal::before {
+    content: '閲';
+    font-family: var(--font-display);
+    font-size: 2.4rem;
+    color: var(--rust);
+    line-height: 1;
+  }
+
+  .login-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 2.4vw, 2.6rem);
+    letter-spacing: 0.35em;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+  }
+  .login-subtitle {
+    color: var(--text-dim);
+    margin-bottom: 2.4rem;
+    font-size: clamp(0.85rem, 1vw, 1rem);
+    letter-spacing: 0.15em;
+  }
+
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: clamp(24px, 2.4vw, 40px);
+    width: 100%; max-width: clamp(380px, 32vw, 500px);
+    box-shadow: var(--shadow);
+    position: relative;
+  }
+  /* 卡片角饰 */
+  .login-card::before,
+  .login-card::after {
+    content: '';
+    position: absolute;
+    width: 16px; height: 16px;
+    border-color: var(--accent);
+    border-style: solid;
+    opacity: 0.5;
+  }
+  .login-card::before { top: 8px; left: 8px; border-width: 1px 0 0 1px; }
+  .login-card::after  { bottom: 8px; right: 8px; border-width: 0 1px 1px 0; }
+
+  .login-card label {
+    display: block;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.65rem;
+  }
+
+  .input-row { display: flex; gap: 0.65rem; margin-bottom: 1.25rem; }
+
+  .login-card input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.7rem 0.9rem;
+    color: var(--ink);
+    font-size: 0.85rem;
+    font-family: 'SF Mono', 'Cascadia Code', monospace;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .login-card input:focus { border-color: var(--accent); }
+  .login-card input::placeholder { color: var(--border); }
+
+  .btn {
+    background: var(--accent2);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.7rem 1.4rem;
+    font-size: 0.9rem;
+    font-family: var(--font-body);
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    transition: background .2s, transform .1s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--accent); }
+  .btn:active { transform: scale(.97); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  .tip {
+    color: var(--text-dim);
+    font-size: 0.78rem;
+    line-height: 2;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--border);
+  }
+
+  #login-error {
+    color: var(--rust);
+    font-size: 0.85rem;
+    margin-top: 0.65rem;
+    display: none;
+    letter-spacing: 0.05em;
+  }
+
+  /* ──────────────────── 顶栏 ──────────────────── */
+  #dashboard { display: none; }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 clamp(20px, 2.5vw, 48px);
+    height: clamp(56px, 4.5vw, 72px);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+  }
+
+  .topbar-left { display: flex; align-items: center; gap: 0.9rem; }
+
+  .topbar-seal {
+    width: clamp(30px, 2.4vw, 42px);
+    height: clamp(30px, 2.4vw, 42px);
+    border: 1.5px solid var(--rust);
+    border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 1.3vw, 1.5rem);
+    color: var(--rust);
+    background: rgba(158,90,58,0.04);
+    flex-shrink: 0;
+  }
+
+  .topbar-title {
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 1.3vw, 1.5rem);
+    letter-spacing: 0.25em;
+    color: var(--ink);
+  }
+
+  /* 标签页 — 毛笔下划线风格 */
+  .tab-bar { display: flex; gap: 0; }
+
+  .tab {
+    padding: 0 clamp(14px, 1.5vw, 26px);
+    height: clamp(56px, 4.5vw, 72px);
+    line-height: clamp(56px, 4.5vw, 72px);
+    font-size: clamp(0.9rem, 1.1vw, 1.15rem);
+    font-family: var(--font-display);
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    position: relative;
+    transition: color .2s;
+  }
+  .tab::after {
+    content: '';
+    position: absolute; bottom: 0; left: 50%; right: 50%;
+    height: 2px;
+    background: var(--accent2);
+    transition: left .25s, right .25s;
+  }
+  .tab.active { color: var(--ink); }
+  .tab.active::after { left: 20%; right: 20%; }
+  .tab:hover:not(.active) { color: var(--ink); }
+
+  .logout-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    border-radius: 4px;
+    padding: 0.4rem 0.9rem;
+    font-size: 0.82rem;
+    font-family: var(--font-body);
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .logout-btn:hover { border-color: var(--accent); color: var(--accent2); }
+
+  .main-content {
+    padding: clamp(20px, 2.2vw, 40px) clamp(20px, 2.8vw, 52px);
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+
+  /* Tab pages */
+  .tab-page { display: none; }
+  .tab-page.active { display: block; }
+
+  /* ──────────────────── 时间维度选择器 ──────────────────── */
+  .period-selector {
+    display: flex; gap: 0;
+    margin-bottom: 24px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    width: fit-content;
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .period-btn {
+    padding: 0.45rem 1.25rem;
+    border: none;
+    border-right: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    font-size: clamp(0.82rem, 1vw, 1rem);
+    font-family: var(--font-display);
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .period-btn:last-child { border-right: none; }
+  .period-btn.active {
+    background: var(--accent2);
+    color: #fff;
+  }
+  .period-btn:hover:not(.active) { background: var(--surface2); color: var(--ink); }
+
+  /* ──────────────────── 统计卡片 ──────────────────── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(clamp(180px, 16vw, 260px), 1fr));
+    gap: clamp(12px, 1.2vw, 20px);
+    margin-bottom: clamp(20px, 2vw, 32px);
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow .2s, border-color .2s;
+  }
+  .stat-card:hover { box-shadow: var(--shadow); border-color: var(--accent); }
+
+  /* 左侧墨条 */
+  .stat-card::before {
+    content: '';
+    position: absolute; top: 16px; left: 0;
+    width: 3px; height: calc(100% - 32px);
+    background: var(--card-accent, var(--accent));
+    border-radius: 0 2px 2px 0;
+  }
+
+  .stat-icon {
+    font-size: clamp(1.1rem, 1.4vw, 1.6rem);
+    margin-bottom: 0.9rem;
+    opacity: 0.8;
+  }
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 1.8vw, 2rem);
+    color: var(--card-color, var(--accent2));
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+  .stat-label {
+    font-size: clamp(0.78rem, 0.85vw, 0.92rem);
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+  }
+  .stat-sub { font-size: clamp(0.75rem, 0.8vw, 0.88rem); color: var(--text-dim); margin-top: 0.4rem; }
+
+  /* ──────────────────── 图表区 ──────────────────── */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(clamp(340px, 30vw, 560px), 1fr));
+    gap: clamp(14px, 1.4vw, 24px);
+    margin-bottom: clamp(16px, 1.6vw, 28px);
+  }
+
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: clamp(18px, 1.8vw, 32px) clamp(20px, 2vw, 36px);
+    position: relative;
+  }
+  /* 卡片四角点缀 */
+  .chart-card::before, .chart-card::after,
+  .chart-card > .corner-br, .chart-card > .corner-tl {
+    content: '';
+    position: absolute;
+    width: 12px; height: 12px;
+    border-color: var(--border);
+    border-style: solid;
+    opacity: 0.6;
+  }
+  .chart-card::before { top: 6px; left: 6px; border-width: 1px 0 0 1px; }
+  .chart-card::after  { bottom: 6px; right: 6px; border-width: 0 1px 1px 0; }
+
+  .chart-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .chart-title {
+    font-family: var(--font-display);
+    font-size: clamp(0.95rem, 1.1vw, 1.25rem);
+    letter-spacing: 0.15em;
+    color: var(--ink);
+  }
+  .chart-badge {
+    font-size: clamp(0.72rem, 0.78vw, 0.88rem);
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+  }
+
+  .chart-wrap { position: relative; }
+
+  /* ──────────────────── 偏好分类进度条 ──────────────────── */
+  .prefer-list { display: flex; flex-direction: column; gap: 12px; }
+  .prefer-label {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 5px;
+    font-size: clamp(0.82rem, 0.9vw, 1rem);
+    letter-spacing: 0.06em;
+  }
+  .prefer-count { color: var(--text-dim); font-size: clamp(0.75rem, 0.82vw, 0.9rem); }
+  .progress-bar-wrap {
+    background: var(--surface2);
+    border-radius: 3px;
+    height: 5px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    transition: width .9s cubic-bezier(.22,1,.36,1);
+  }
+
+  /* ──────────────────── 书籍排行 ──────────────────── */
+  .book-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .book-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: var(--surface2);
+    transition: border-color .2s, background .2s;
+  }
+  .book-item:hover { border-color: var(--border); background: var(--surface); }
+
+  .book-rank {
+    width: 26px; height: 26px;
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .rank-1 { background: #c8a84b; color: #fff; }
+  .rank-2 { background: #9aacb8; color: #fff; }
+  .rank-3 { background: #b07848; color: #fff; }
+  .rank-other { background: var(--border); color: var(--text-dim); }
+
+  .book-cover {
+    width: clamp(36px, 3vw, 52px);
+    height: clamp(48px, 4vw, 68px);
+    border-radius: 4px;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+  }
+
+  .book-info { flex: 1; min-width: 0; }
+  .book-title { font-size: clamp(0.82rem, 0.92vw, 1rem); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .book-author { font-size: clamp(0.75rem, 0.82vw, 0.9rem); color: var(--text-dim); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .book-tags { display: flex; gap: 4px; margin-top: 5px; }
+  .book-tag {
+    font-size: clamp(0.68rem, 0.72vw, 0.8rem); padding: 1px 6px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text-dim);
+    letter-spacing: 0.06em;
+  }
+
+  .book-time { text-align: right; flex-shrink: 0; }
+  .book-time > div:first-child { font-size: clamp(0.82rem, 0.92vw, 1rem); color: var(--accent2); font-weight: 600; }
+  .book-time-sub { font-size: clamp(0.7rem, 0.75vw, 0.82rem); color: var(--text-dim); margin-top: 2px; letter-spacing: 0.06em; }
+
+  /* 对比涨跌 */
+  .compare-chip {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    font-size: clamp(0.72rem, 0.8vw, 0.88rem);
+    margin-top: 0.4rem;
+    letter-spacing: 0.06em;
+  }
+  .compare-up   { background: rgba(107,156,114,0.12); color: var(--accent2); }
+  .compare-down { background: rgba(158,90,58,0.10);  color: var(--rust); }
+
+  /* ──────────────────── 书架 ──────────────────── */
+  .shelf-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(clamp(110px, 10vw, 160px), 1fr));
+    gap: clamp(14px, 1.4vw, 24px);
+  }
+  .shelf-book { cursor: pointer; transition: transform .25s; text-align: center; }
+  .shelf-book:hover { transform: translateY(-5px); }
+  .shelf-book img {
+    width: 100%; aspect-ratio: 2/3;
+    object-fit: cover;
+    border-radius: 5px;
+    display: block;
+    border: 1px solid var(--border);
+    box-shadow: 2px 3px 8px rgba(42,56,40,0.10);
+    background: var(--surface2);
+  }
+  .shelf-book-title { font-size: clamp(0.72rem, 0.82vw, 0.92rem); margin-top: 0.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .shelf-book-author { font-size: clamp(0.68rem, 0.75vw, 0.82rem); color: var(--text-dim); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .shelf-finish-badge {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: clamp(0.62rem, 0.68vw, 0.78rem);
+    padding: 1px 6px;
+    border: 1px solid var(--accent);
+    border-radius: 2px;
+    color: var(--accent2);
+    letter-spacing: 0.08em;
+  }
+
+  /* ──────────────────── 笔记 ──────────────────── */
+  .note-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .note-stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    text-align: center;
+    position: relative;
+  }
+  .note-stat::after {
+    content: '';
+    position: absolute; bottom: 0; left: 20%; right: 20%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    border-radius: 2px;
+  }
+  .note-stat-val {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 1.9vw, 2.2rem);
+    color: var(--accent2);
+  }
+  .note-stat-label { font-size: clamp(0.75rem, 0.82vw, 0.92rem); color: var(--text-dim); margin-top: 4px; letter-spacing: 0.08em; }
+
+  .note-books { display: flex; flex-direction: column; gap: 10px; }
+  .note-book-item {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    transition: border-color .2s;
+  }
+  .note-book-item:hover { border-color: var(--accent); }
+  .note-book-info { flex: 1; min-width: 0; }
+  .note-book-title { font-size: clamp(0.82rem, 0.92vw, 1rem); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .note-book-author { font-size: clamp(0.75rem, 0.82vw, 0.9rem); color: var(--text-dim); margin-top: 2px; }
+  .note-counts { display: flex; gap: clamp(10px, 1.1vw, 18px); flex-shrink: 0; }
+  .note-count-item { font-size: clamp(0.72rem, 0.8vw, 0.88rem); text-align: center; color: var(--text-dim); letter-spacing: 0.06em; }
+  .note-count-val { font-family: var(--font-display); font-size: clamp(1rem, 1.2vw, 1.4rem); display: block; }
+
+  /* ──────────────────── 加载 / 错误 ──────────────────── */
+  .loading {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 100px 0;
+    gap: 18px;
+  }
+  /* 水墨圆圈加载动画 */
+  .spinner {
+    width: 38px; height: 38px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent2);
+    border-radius: 50%;
+    animation: spin .9s linear infinite;
+  }
+  .loading-text {
+    font-family: var(--font-display);
+    color: var(--text-dim);
+    letter-spacing: 0.2em;
+    font-size: clamp(0.88rem, 1vw, 1.1rem);
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-msg {
+    text-align: center; padding: 60px;
+    color: var(--rust);
+    font-size: clamp(0.88rem, 1vw, 1.1rem);
+    letter-spacing: 0.15em;
+  }
+
+  /* ──────────────────── 响应式 ──────────────────── */
+  @media (max-width: 768px) {
+    .topbar { padding: 0 16px; }
+    .tab { padding: 0 14px; font-size: 14px; letter-spacing: 2px; }
+    .main-content { padding: 16px; }
+    .charts-grid { grid-template-columns: 1fr; }
+    .period-selector { width: 100%; }
+    .period-btn { flex: 1; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════ 登录页 ══════════════════════════════════ -->
+<div id="login-screen">
+
+  <!-- 水墨竹叶装饰 -->
+  <svg class="ink-deco" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M280 10 Q240 60 200 40 Q180 30 170 50 Q160 70 180 90 Q200 110 160 130 Q130 145 140 170 Q150 195 120 210" stroke="#4a7a54" stroke-width="1.5" fill="none"/>
+    <ellipse cx="230" cy="48" rx="28" ry="10" transform="rotate(-35 230 48)" fill="#4a7a54" opacity="0.6"/>
+    <ellipse cx="185" cy="75" rx="24" ry="9"  transform="rotate(-20 185 75)" fill="#4a7a54" opacity="0.5"/>
+    <ellipse cx="165" cy="108" rx="26" ry="9" transform="rotate(-50 165 108)" fill="#4a7a54" opacity="0.5"/>
+    <ellipse cx="148" cy="148" rx="22" ry="8" transform="rotate(-15 148 148)" fill="#4a7a54" opacity="0.45"/>
+    <circle cx="60" cy="260" r="40" fill="#6b9c72" opacity="0.08"/>
+    <circle cx="40" cy="240" r="25" fill="#6b9c72" opacity="0.06"/>
+  </svg>
+
+  <div class="login-seal"></div>
+  <div class="login-title">丹青阅览</div>
+  <div class="login-subtitle">微信读书 · 数据可视化</div>
+
+  <div class="login-card">
+    <label>请输入微信读书 API Key</label>
+    <div class="input-row">
+      <input type="text" id="api-key-input" placeholder="wrk-xxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false" />
+      <button class="btn" id="connect-btn" onclick="connect()">入卷</button>
+    </div>
+    <div id="login-error"></div>
+    <div class="tip">
+      <b style="color:var(--ink); letter-spacing:1px">使用前请先启动本地服务：</b><br>
+      <code style="color:var(--accent2); font-family:monospace">node server.js</code><br>
+      然后在浏览器打开 <code style="color:var(--accent2)">http://localhost:3000</code><br><br>
+      API Key 格式为 <code style="color:var(--accent2)">wrk-xxx</code>，仅在本地转发，不传至第三方。<br>
+      Key 已加密保存于浏览器，下次自动填入。
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ 仪表盘 ══════════════════════════════════ -->
+<div id="dashboard">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-seal">閲</div>
+      <div class="topbar-title">丹青阅览</div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab active" onclick="switchTab('overview')">概 览</button>
+      <button class="tab" onclick="switchTab('shelf')">书 架</button>
+      <button class="tab" onclick="switchTab('notes')">笔 记</button>
+    </div>
+    <button class="logout-btn" onclick="logout()">退出</button>
+  </div>
+
+  <div class="main-content">
+
+    <!-- ── 概览 ── -->
+    <div class="tab-page active" id="tab-overview">
+      <div id="overview-loading" class="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">正在翻阅书页…</div>
+      </div>
+      <div id="overview-content" style="display:none">
+
+        <div class="period-selector">
+          <button class="period-btn active" data-mode="monthly" onclick="changePeriod('monthly',this)">本月</button>
+          <button class="period-btn" data-mode="weekly" onclick="changePeriod('weekly',this)">本周</button>
+          <button class="period-btn" data-mode="annually" onclick="changePeriod('annually',this)">今年</button>
+          <button class="period-btn" data-mode="overall" onclick="changePeriod('overall',this)">全部</button>
+        </div>
+
+        <div class="stats-grid" id="stat-cards"></div>
+
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div class="chart-title">阅读时长分布</div>
+              <div class="chart-badge" id="read-times-badge">按天</div>
+            </div>
+            <div class="chart-wrap" style="height:220px">
+              <canvas id="readTimesChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <div class="chart-title">阅读时段偏好</div>
+              <div class="chart-badge" id="prefer-time-word"></div>
+            </div>
+            <div class="chart-wrap" style="height:220px">
+              <canvas id="preferTimeChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div class="chart-title">偏好分类</div>
+              <div class="chart-badge" id="prefer-category-word"></div>
+            </div>
+            <div id="prefer-category-list" class="prefer-list"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <div class="chart-title">阅读时长排行</div>
+              <div class="chart-badge">Top 5</div>
+            </div>
+            <div id="read-longest-list" class="book-list"></div>
+          </div>
+        </div>
+
+      </div>
+      <div id="overview-error" class="error-msg" style="display:none"></div>
+    </div>
+
+    <!-- ── 书架 ── -->
+    <div class="tab-page" id="tab-shelf">
+      <div id="shelf-loading" class="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">正在整理书架…</div>
+      </div>
+      <div id="shelf-content" style="display:none">
+        <div class="stats-grid" id="shelf-stat-cards"></div>
+        <div class="shelf-grid" id="shelf-grid"></div>
+      </div>
+      <div id="shelf-error" class="error-msg" style="display:none"></div>
+    </div>
+
+    <!-- ── 笔记 ── -->
+    <div class="tab-page" id="tab-notes">
+      <div id="notes-loading" class="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">正在摘录笔墨…</div>
+      </div>
+      <div id="notes-content" style="display:none">
+        <div class="note-overview" id="note-overview-stats"></div>
+        <div class="chart-card" style="margin-bottom:20px">
+          <div class="chart-header">
+            <div class="chart-title">笔记分布</div>
+            <div class="chart-badge">Top 10 书籍</div>
+          </div>
+          <div style="height:260px"><canvas id="notesChart"></canvas></div>
+        </div>
+        <div class="note-books" id="note-books-list"></div>
+      </div>
+      <div id="notes-error" class="error-msg" style="display:none"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+//  Config & State
+// ════════════════════════════════════════
+const GATEWAY = '/api'; // 通过本地代理转发，避免 CORS
+const SKILL_VERSION = '1.0.3';
+
+let apiKey = '';
+let charts = {};
+let currentMode = 'monthly';
+let cachedReadData = {};
+let shelfLoaded = false;
+let notesLoaded = false;
+
+// ════════════════════════════════════════
+//  API helper
+// ════════════════════════════════════════
+async function apiCall(body) {
+  const res = await fetch(GATEWAY, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({ ...body, skill_version: SKILL_VERSION })
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  if (data.errcode && data.errcode !== 0) throw new Error(data.errmsg || `errcode ${data.errcode}`);
+  return data;
+}
+
+// ════════════════════════════════════════
+//  Utilities
+// ════════════════════════════════════════
+function fmtSec(sec) {
+  if (!sec) return '0分钟';
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  if (h === 0) return `${m}分钟`;
+  if (m === 0) return `${h}小时`;
+  return `${h}小时${m}分钟`;
+}
+
+function fmtTs(ts) {
+  if (!ts) return '';
+  const d = new Date(ts * 1000);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+// 水墨风图表全局配置
+const INK = {
+  gridColor:  'rgba(42,56,40,0.06)',
+  tickColor:  '#7d9680',
+  bar:        'rgba(107,156,114,0.45)',
+  barBorder:  'rgba(74,122,84,0.85)',
+  line:       'rgba(74,122,84,0.9)',
+  lineFill0:  'rgba(107,156,114,0.28)',
+  lineFill1:  'rgba(107,156,114,0.01)',
+  highlight:  'rgba(74,122,84,0.75)',
+  review:     'rgba(168,128,58,0.65)',
+  bookmark:   'rgba(158,90,58,0.55)',
+};
+
+// ════════════════════════════════════════
+//  Auth
+// ════════════════════════════════════════
+function connect() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key) { showError('请输入 API Key'); return; }
+  apiKey = key;
+  localStorage.setItem('wrk', key);
+  document.getElementById('login-error').style.display = 'none';
+  document.getElementById('connect-btn').disabled = true;
+  document.getElementById('connect-btn').textContent = '连接中…';
+
+  apiCall({ api_name: '/readdata/detail', mode: 'monthly' })
+    .then(() => {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      loadOverview('monthly');
+    })
+    .catch(e => {
+      showError('连接失败：' + e.message + '。请检查 API Key 是否正确。');
+      document.getElementById('connect-btn').disabled = false;
+      document.getElementById('connect-btn').textContent = '入卷';
+    });
+}
+
+function showError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function logout() {
+  localStorage.removeItem('wrk');
+  apiKey = '';
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('api-key-input').value = '';
+  document.getElementById('connect-btn').disabled = false;
+  document.getElementById('connect-btn').textContent = '入卷';
+  shelfLoaded = false; notesLoaded = false; cachedReadData = {};
+}
+
+// ════════════════════════════════════════
+//  Tab routing
+// ════════════════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(`tab-${name}`).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'shelf' && !shelfLoaded) loadShelf();
+  if (name === 'notes' && !notesLoaded) loadNotes();
+}
+
+function changePeriod(mode, btn) {
+  currentMode = mode;
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadOverview(mode);
+}
+
+// ════════════════════════════════════════
+//  Overview
+// ════════════════════════════════════════
+async function loadOverview(mode) {
+  document.getElementById('overview-loading').style.display = 'flex';
+  document.getElementById('overview-content').style.display = 'none';
+  document.getElementById('overview-error').style.display = 'none';
+  try {
+    let data = cachedReadData[mode];
+    if (!data) {
+      data = await apiCall({ api_name: '/readdata/detail', mode });
+      cachedReadData[mode] = data;
+    }
+    renderOverview(data, mode);
+    document.getElementById('overview-loading').style.display = 'none';
+    document.getElementById('overview-content').style.display = 'block';
+  } catch(e) {
+    document.getElementById('overview-loading').style.display = 'none';
+    document.getElementById('overview-error').style.display = 'block';
+    document.getElementById('overview-error').textContent = '加载失败：' + e.message;
+  }
+}
+
+function renderOverview(d, mode) {
+  renderStatCards(d, mode);
+  renderReadTimesChart(d, mode);
+  renderPreferTimeChart(d);
+  renderPreferCategories(d);
+  renderReadLongest(d);
+}
+
+function renderStatCards(d, mode) {
+  const totalSec = d.totalReadTime || 0;
+  const days = d.readDays || 0;
+  const avgSec = d.dayAverageReadTime || 0;
+  const readStat = d.readStat || [];
+  const compare = d.compare;
+
+  const readDone = readStat.find(s => s.stat === '读完')?.counts || '--';
+  const readOver = readStat.find(s => s.stat === '读过')?.counts || '--';
+
+  let compareHtml = '';
+  if (compare !== undefined && compare !== null) {
+    const pct = Math.abs(Math.round(compare * 100));
+    const up = compare >= 0;
+    compareHtml = `<span class="compare-chip ${up ? 'compare-up' : 'compare-down'}">${up ? '↑' : '↓'} ${pct}% 较上期</span>`;
+  }
+
+  const cards = [
+    { icon: '⏱', value: fmtSec(totalSec),          label: '总阅读时长',   sub: compareHtml,                                  accent: '#6b9c72', color: '#4a7a54' },
+    { icon: '📅', value: `${days} 天`,              label: '有效阅读天数', sub: mode === 'overall' ? '' : `日均 ${fmtSec(avgSec)}`, accent: '#8aac72', color: '#4a7a54' },
+    { icon: '📖', value: readOver,                  label: '读过书籍',     sub: `已读完 ${readDone}`,                         accent: '#a8803a', color: '#a8803a' },
+    { icon: '✍',  value: readStat.find(s=>s.stat==='笔记')?.counts||'--', label:'笔记总数', sub:'', accent:'#9e5a3a', color:'#9e5a3a' },
+  ];
+
+  document.getElementById('stat-cards').innerHTML = cards.map(c => `
+    <div class="stat-card" style="--card-accent:${c.accent};--card-color:${c.color}">
+      <div class="stat-icon">${c.icon}</div>
+      <div class="stat-value">${c.value}</div>
+      <div class="stat-label">${c.label}</div>
+      ${c.sub ? `<div class="stat-sub">${c.sub}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+function renderReadTimesChart(d, mode) {
+  destroyChart('readTimes');
+  const rt = d.readTimes || {};
+  const entries = Object.entries(rt).sort((a,b) => +a[0] - +b[0]);
+  if (!entries.length) return;
+
+  let labels, values;
+  if (mode === 'overall') {
+    labels = entries.map(([ts]) => new Date(+ts*1000).getFullYear());
+    values = entries.map(([,v]) => Math.round(v/60));
+    document.getElementById('read-times-badge').textContent = '按年';
+  } else if (mode === 'annually') {
+    labels = entries.map(([ts]) => `${new Date(+ts*1000).getMonth()+1}月`);
+    values = entries.map(([,v]) => Math.round(v/60));
+    document.getElementById('read-times-badge').textContent = '按月';
+  } else {
+    labels = entries.map(([ts]) => { const d2=new Date(+ts*1000); return `${d2.getMonth()+1}/${d2.getDate()}`; });
+    values = entries.map(([,v]) => Math.round(v/60));
+    document.getElementById('read-times-badge').textContent = '按天（分钟）';
+  }
+
+  const basePx = parseFloat(getComputedStyle(document.documentElement).fontSize);
+  charts.readTimes = new Chart(document.getElementById('readTimesChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ data: values, backgroundColor: INK.bar, borderColor: INK.barBorder, borderWidth: 1.5, borderRadius: 4, borderSkipped: false }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => fmtSec(ctx.raw * 60) } } },
+      scales: {
+        x: { grid: { color: INK.gridColor }, ticks: { color: INK.tickColor, font: { size: Math.round(basePx * 0.75), family: "'Noto Serif SC', serif" } } },
+        y: { grid: { color: INK.gridColor }, ticks: { color: INK.tickColor, font: { size: Math.round(basePx * 0.75) }, callback: v => v+'m' } }
+      }
+    }
+  });
+}
+
+function renderPreferTimeChart(d) {
+  destroyChart('preferTime');
+  const pt = d.preferTime;
+  if (!pt || !pt.length) return;
+
+  document.getElementById('prefer-time-word').textContent = d.preferTimeWord || '';
+
+  const hours = Array.from({length:24}, (_,i) => (i+6) % 24);
+  const labels = hours.map(h => `${String(h).padStart(2,'0')}:00`);
+  const values = pt.map(v => Math.round(v/60));
+
+  const bp2 = parseFloat(getComputedStyle(document.documentElement).fontSize);
+  charts.preferTime = new Chart(document.getElementById('preferTimeChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        fill: true,
+        backgroundColor: (ctx2) => {
+          const g = ctx2.chart.ctx.createLinearGradient(0,0,0,220);
+          g.addColorStop(0, INK.lineFill0);
+          g.addColorStop(1, INK.lineFill1);
+          return g;
+        },
+        borderColor: INK.line,
+        borderWidth: 2,
+        tension: 0.45,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => fmtSec(ctx.raw * 60) } } },
+      scales: {
+        x: { grid: { color: INK.gridColor }, ticks: { color: INK.tickColor, font: { size: Math.round(bp2 * 0.72) }, maxTicksLimit: 8, callback: (_, i) => labels[i] } },
+        y: { grid: { color: INK.gridColor }, ticks: { color: INK.tickColor, font: { size: Math.round(bp2 * 0.75) }, callback: v => v+'m' } }
+      }
+    }
+  });
+}
+
+function renderPreferCategories(d) {
+  const cats = d.preferCategory || [];
+  const el = document.getElementById('prefer-category-list');
+  document.getElementById('prefer-category-word').textContent = d.preferCategoryWord || '';
+
+  if (!cats.length) { el.innerHTML = '<div style="color:var(--text-dim);font-size:13px;letter-spacing:2px">暂无数据</div>'; return; }
+
+  const maxVal = Math.max(...cats.map(c => c.val || 0), 1);
+  el.innerHTML = cats.slice(0,8).map(c => {
+    const pct = Math.round((c.val || 0) / maxVal * 100);
+    return `
+      <div class="prefer-item">
+        <div class="prefer-label">
+          <span>${c.categoryTitle}</span>
+          <span class="prefer-count">${c.readingCount}本 · ${fmtSec(c.readingTime||0)}</span>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" style="width:${pct}%"></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderReadLongest(d) {
+  const books = (d.readLongest || []).slice(0,5);
+  const el = document.getElementById('read-longest-list');
+
+  if (!books.length) { el.innerHTML = '<div style="color:var(--text-dim);font-size:13px;letter-spacing:2px">暂无数据</div>'; return; }
+
+  el.innerHTML = books.map((item, i) => {
+    const info = item.book || item.albumInfo || {};
+    const title = info.title || info.name || '未知书籍';
+    const author = info.author || info.authorName || '';
+    const cover = info.cover || '';
+    const tags = item.tags || [];
+    const rankClass = i < 3 ? `rank-${i+1}` : 'rank-other';
+    return `
+      <div class="book-item">
+        <div class="book-rank ${rankClass}">${i+1}</div>
+        ${cover ? `<img class="book-cover" src="${cover}" alt="" onerror="this.style.display='none'">` : ''}
+        <div class="book-info">
+          <div class="book-title">${title}</div>
+          <div class="book-author">${author}</div>
+          ${tags.length ? `<div class="book-tags">${tags.map(t=>`<span class="book-tag">${t}</span>`).join('')}</div>` : ''}
+        </div>
+        <div class="book-time">
+          <div>${fmtSec(item.readTime)}</div>
+          <div class="book-time-sub">阅读时长</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════
+//  Shelf
+// ════════════════════════════════════════
+async function loadShelf() {
+  try {
+    const data = await apiCall({ api_name: '/shelf/sync' });
+    shelfLoaded = true;
+    renderShelf(data);
+    document.getElementById('shelf-loading').style.display = 'none';
+    document.getElementById('shelf-content').style.display = 'block';
+  } catch(e) {
+    document.getElementById('shelf-loading').style.display = 'none';
+    document.getElementById('shelf-error').style.display = 'block';
+    document.getElementById('shelf-error').textContent = '加载失败：' + e.message;
+  }
+}
+
+function renderShelf(data) {
+  const books = data.books || [];
+  const albums = data.albums || [];
+  const mp = data.mp;
+  const total = books.length + albums.length + (mp ? 1 : 0);
+  const finished = books.filter(b => b.finishReading === 1).length;
+  const categories = {};
+  books.forEach(b => { const cat = b.category || '其他'; categories[cat] = (categories[cat]||0)+1; });
+  const topCat = Object.entries(categories).sort((a,b)=>b[1]-a[1])[0];
+
+  document.getElementById('shelf-stat-cards').innerHTML = `
+    <div class="stat-card" style="--card-accent:#6b9c72;--card-color:#4a7a54">
+      <div class="stat-icon">📚</div>
+      <div class="stat-value">${total}</div>
+      <div class="stat-label">书架总数</div>
+      <div class="stat-sub">电子书 ${books.length} · 有声书 ${albums.length}${mp ? ' · 文章1' : ''}</div>
+    </div>
+    <div class="stat-card" style="--card-accent:#8aac72;--card-color:#4a7a54">
+      <div class="stat-icon">✅</div>
+      <div class="stat-value">${finished}</div>
+      <div class="stat-label">已读完</div>
+      <div class="stat-sub">完成率 ${books.length ? Math.round(finished/books.length*100) : 0}%</div>
+    </div>
+    <div class="stat-card" style="--card-accent:#a8803a;--card-color:#a8803a">
+      <div class="stat-icon">🗂</div>
+      <div class="stat-value">${Object.keys(categories).length}</div>
+      <div class="stat-label">书籍分类数</div>
+      <div class="stat-sub">最多：${topCat ? topCat[0] : '--'}</div>
+    </div>
+  `;
+
+  const sorted = [...books].sort((a,b) => (b.readUpdateTime||0) - (a.readUpdateTime||0));
+  document.getElementById('shelf-grid').innerHTML =
+    sorted.map(b => `
+      <div class="shelf-book" title="${b.title}">
+        <img src="${b.cover||''}" alt="${b.title}" loading="lazy" onerror="this.style.background='var(--surface2)'">
+        <div class="shelf-book-title">${b.title}</div>
+        <div class="shelf-book-author">${b.author||''}</div>
+        ${b.finishReading===1 ? '<span class="shelf-finish-badge">已读完</span>' : ''}
+      </div>`).join('') +
+    albums.map(a => {
+      const info = a.albumInfo || {};
+      return `
+        <div class="shelf-book" title="${info.name}">
+          <img src="${info.cover||''}" alt="${info.name}" loading="lazy" onerror="this.style.background='var(--surface2)'">
+          <div class="shelf-book-title">${info.name}</div>
+          <div class="shelf-book-author">🎧 ${info.authorName||''}</div>
+        </div>`;
+    }).join('');
+}
+
+// ════════════════════════════════════════
+//  Notes
+// ════════════════════════════════════════
+async function loadNotes() {
+  try {
+    let allBooks = [], hasMore = 1, lastSort;
+    while (hasMore) {
+      const params = { api_name: '/user/notebooks', count: 50 };
+      if (lastSort) params.lastSort = lastSort;
+      const data = await apiCall(params);
+      const page = data.books || [];
+      allBooks = allBooks.concat(page);
+      hasMore = data.hasMore || 0;
+      if (page.length) lastSort = page[page.length-1].sort;
+      else break;
+    }
+    notesLoaded = true;
+    renderNotes(allBooks);
+    document.getElementById('notes-loading').style.display = 'none';
+    document.getElementById('notes-content').style.display = 'block';
+  } catch(e) {
+    document.getElementById('notes-loading').style.display = 'none';
+    document.getElementById('notes-error').style.display = 'block';
+    document.getElementById('notes-error').textContent = '加载失败：' + e.message;
+  }
+}
+
+function renderNotes(books) {
+  let totalNotes=0, totalHighlights=0, totalReviews=0, totalBookmarks=0;
+  books.forEach(b => {
+    totalNotes     += (b.reviewCount||0) + (b.noteCount||0) + (b.bookmarkCount||0);
+    totalHighlights += b.noteCount    || 0;
+    totalReviews    += b.reviewCount  || 0;
+    totalBookmarks  += b.bookmarkCount|| 0;
+  });
+
+  document.getElementById('note-overview-stats').innerHTML = `
+    <div class="note-stat"><div class="note-stat-val">${totalNotes}</div><div class="note-stat-label">笔记总数</div></div>
+    <div class="note-stat"><div class="note-stat-val">${totalHighlights}</div><div class="note-stat-label">划线数</div></div>
+    <div class="note-stat"><div class="note-stat-val">${totalReviews}</div><div class="note-stat-label">想法/点评</div></div>
+    <div class="note-stat"><div class="note-stat-val">${totalBookmarks}</div><div class="note-stat-label">书签数</div></div>
+    <div class="note-stat"><div class="note-stat-val">${books.length}</div><div class="note-stat-label">有笔记书籍</div></div>
+  `;
+
+  const sorted = [...books].sort((a,b) =>
+    ((b.reviewCount||0)+(b.noteCount||0)+(b.bookmarkCount||0)) -
+    ((a.reviewCount||0)+(a.noteCount||0)+(a.bookmarkCount||0)));
+
+  const top10 = sorted.slice(0,10);
+  destroyChart('notes');
+  charts.notes = new Chart(document.getElementById('notesChart'), {
+    type: 'bar',
+    data: {
+      labels: top10.map(b => (b.book?.title||'未知').slice(0,10)),
+      datasets: [
+        { label:'划线',  data: top10.map(b=>b.noteCount||0),     backgroundColor: INK.highlight, borderRadius: 3 },
+        { label:'想法',  data: top10.map(b=>b.reviewCount||0),   backgroundColor: INK.review,    borderRadius: 3 },
+        { label:'书签',  data: top10.map(b=>b.bookmarkCount||0), backgroundColor: INK.bookmark,  borderRadius: 3 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: INK.tickColor, font: { size: Math.round(parseFloat(getComputedStyle(document.documentElement).fontSize) * 0.78), family: "'Noto Serif SC', serif" } } } },
+      scales: {
+        x: { stacked: true, grid: { color: INK.gridColor }, ticks: { color: INK.tickColor, font: { size: Math.round(parseFloat(getComputedStyle(document.documentElement).fontSize) * 0.75) } } },
+        y: { stacked: true, grid: { color: INK.gridColor }, ticks: { color: INK.tickColor, font: { size: Math.round(parseFloat(getComputedStyle(document.documentElement).fontSize) * 0.75) } } }
+      }
+    }
+  });
+
+  document.getElementById('note-books-list').innerHTML = sorted.slice(0,20).map(b => {
+    const info = b.book || {};
+    return `
+      <div class="note-book-item">
+        ${info.cover ? `<img class="book-cover" src="${info.cover}" style="width:36px;height:48px;border-radius:4px;border:1px solid var(--border)" onerror="this.style.display='none'">` : ''}
+        <div class="note-book-info">
+          <div class="note-book-title">${info.title||'未知'}</div>
+          <div class="note-book-author">${info.author||''}</div>
+        </div>
+        <div class="note-counts">
+          <div class="note-count-item"><span class="note-count-val" style="color:#4a7a54">${b.noteCount||0}</span>划线</div>
+          <div class="note-count-item"><span class="note-count-val" style="color:#a8803a">${b.reviewCount||0}</span>想法</div>
+          <div class="note-count-item"><span class="note-count-val" style="color:#9e5a3a">${b.bookmarkCount||0}</span>书签</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════
+//  Init
+// ════════════════════════════════════════
+(function init() {
+  const saved = localStorage.getItem('wrk');
+  if (saved) document.getElementById('api-key-input').value = saved;
+  document.getElementById('api-key-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') connect();
+  });
+})();
+</script>
+</body>
+</html>
