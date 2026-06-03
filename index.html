@@ -3,49 +3,71 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>微信读书 · 丹青阅览</title>
+<title>微信读书 · 翻页里程 ReadMap</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@300;400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-  /* 根字号随视口宽度线性缩放：1280px→15px，1920px→18px，超大屏封顶 */
   html { font-size: clamp(15px, 1.05vw, 20px); }
 
   :root {
-    --bg:       #eff4ee;
-    --surface:  #fafcf9;
-    --surface2: #e6ede5;
-    --border:   #c4d2bf;
+    --bg:       #f3f0e8;   /* 浅宣纸色 */
+    --surface:  #faf8f3;   /* 卡片面 */
+    --surface2: #ece9df;   /* 次级面 */
+    --border:   #cad4c6;
     --accent:   #6b9c72;
     --accent2:  #4a7a54;
-    --ink:      #2a3828;
+    --ink:      #1e2c1c;
     --text:     #2a3828;
-    --text-dim: #7d9680;
+    --text-dim: #7a907d;
     --gold:     #a8803a;
     --rust:     #9e5a3a;
-    --shadow:   0 2px 16px rgba(42,56,40,0.08);
-    --radius:   12px;
-    --font-display: 'Ma Shan Zheng', 'Noto Serif SC', 'Source Han Serif SC', 'STSong', serif;
-    --font-body:    'Noto Serif SC', 'Source Han Serif SC', 'STSong', 'SimSun', serif;
+    --border-hair:   rgba(202,212,198,0.42);  /* 发丝边线 */
+    --shadow:        0 6px 36px rgba(26,40,24,0.06);
+    --shadow-hover:  0 16px 56px rgba(26,40,24,0.10);
+    --font-display: 'Ma Shan Zheng', 'Noto Serif SC', serif;
+    --font-body:    'Noto Serif SC', 'Source Han Serif SC', 'STSong', serif;
+    /* ── 动效系统 DNA：水墨漂浮哲学 ── */
+    --ease-ink:    cubic-bezier(.25,.46,.45,.94);
+    --ease-spring: cubic-bezier(.22,1,.36,1);
+    --ease-out:    cubic-bezier(.16,1,.3,1);
+    --dur-micro:   150ms;
+    --dur-normal:  380ms;
+    --dur-slow:    650ms;
+    --dur-ink:     900ms;
+    --dur-macro:   1100ms;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
+  /* 宣纸/和纸质感：疏稀长纤维 + 轻微密度变化 */
   body {
     font-family: var(--font-body);
-    font-size: 1rem;          /* 跟随 html 根字号 */
-    background: var(--bg);
+    font-size: 1rem;
+    background-color: var(--bg);
+    background-image:
+      /* 纤维层：各向异性湍流（x极低频→横向拉伸）+ 离散阈值截断 = 稀疏长丝 */
+      url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='1400' height='1000'><filter id='p' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='0.006 0.028' numOctaves='3' seed='17' result='t'/><feColorMatrix in='t' type='saturate' values='0' result='g'/><feColorMatrix in='g' type='matrix' values='0.55 0.25 0.10 0 0.16 0.35 0.55 0.10 0 0.18 0.10 0.20 0.45 0 0.12 0 0 0 1 0' result='c'/><feComponentTransfer in='c'><feFuncA type='discrete' tableValues='0 0 0 0 0 0.02 0.04 0.06 0.07 0.08'/></feComponentTransfer></filter><rect width='100%25' height='100%25' filter='url(%23p)'/></svg>"),
+      /* 密度斑：手工抄纸压力不均，极淡 */
+      radial-gradient(ellipse 65% 45% at 22% 28%, rgba(165,150,115,0.045) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 60% at 80% 70%, rgba(148,162,128,0.038) 0%, transparent 65%),
+      radial-gradient(ellipse 38% 35% at 58% 48%, rgba(172,162,130,0.030) 0%, transparent 60%);
+    background-size: 1400px 1000px, auto, auto, auto;
+    background-attachment: fixed;
     color: var(--text);
     min-height: 100vh;
   }
-
-  /* ──────────────────── 水墨装饰 SVG ──────────────────── */
-  .ink-deco {
-    position: absolute; pointer-events: none;
-    opacity: 0.13;
+  /* 顶层微粒感（极轻，仅补足纸面细腻度）*/
+  body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+    opacity: 0.016;
+    background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.62' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
   }
 
-  /* ──────────────────── 登录页 ──────────────────── */
+  .ink-deco { position: absolute; pointer-events: none; opacity: 0.11; }
+
+  /* ══════════════════════ 登录页 ══════════════════════ */
   #login-screen {
     display: flex;
     flex-direction: column;
@@ -55,292 +77,462 @@
     padding: 24px;
     position: relative;
     overflow: hidden;
-    background:
-      radial-gradient(ellipse 70% 60% at 80% 15%, #d4e6d4 0%, transparent 60%),
-      radial-gradient(ellipse 50% 40% at 10% 90%, #c8ddc8 0%, transparent 50%),
-      var(--bg);
+    /* 透明背景，让 body 的宣纸质感透出来 */
+    background: transparent;
   }
 
-  /* 水墨竹叶背景装饰 */
-  #login-screen .ink-deco { top: 0; right: 0; width: 320px; height: 320px; opacity: 0.10; }
-
-  .login-seal {
-    width: clamp(72px, 5.5vw, 96px);
-    height: clamp(72px, 5.5vw, 96px);
-    border: 2px solid var(--rust);
-    border-radius: 4px;
-    display: flex; align-items: center; justify-content: center;
-    flex-direction: column;
-    margin-bottom: 1.8rem;
-    position: relative;
-    background: rgba(158,90,58,0.04);
-  }
-  .login-seal::before {
-    content: '閲';
+  /* 大字水印 */
+  #login-screen::before {
+    content: '書';
+    position: absolute;
     font-family: var(--font-display);
-    font-size: 2.4rem;
-    color: var(--rust);
+    font-size: min(54vw, 54vh);
+    color: var(--accent2);
+    opacity: 0.032;
+    z-index: 0;
     line-height: 1;
+    pointer-events: none;
+    user-select: none;
   }
+
+  /* 底部渐变金线 */
+  #login-screen::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg,
+      transparent 0%, var(--accent) 25%,
+      var(--gold) 50%, var(--accent) 75%, transparent 100%);
+    opacity: 0.38;
+  }
+
+  #login-screen > * { position: relative; z-index: 1; }
+
+  /* 书卷印章 logo */
+  .login-seal {
+    width: clamp(108px, 8.5vw, 148px);
+    height: clamp(76px, 6vw, 104px);
+    border: 1.5px solid rgba(80,70,50,0.38);
+    border-radius: 0;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 2rem;
+    position: relative;
+    background: rgba(240,235,220,0.55);
+    padding: clamp(10px, 1vw, 16px);
+    transition: border-color 0.4s var(--ease-ink), box-shadow 0.4s var(--ease-ink);
+  }
+  /* 内框细线（双线框，印章感） */
+  .login-seal::before {
+    content: '';
+    position: absolute; inset: 4px;
+    border: 0.5px solid rgba(80,70,50,0.18);
+    pointer-events: none;
+  }
+  .login-seal:hover {
+    border-color: rgba(80,70,50,0.58);
+    box-shadow: 0 0 24px rgba(60,50,30,0.10);
+  }
+  .login-seal svg { width: 100%; height: 100%; display: block; }
 
   .login-title {
     font-family: var(--font-display);
-    font-size: clamp(1.8rem, 2.4vw, 2.6rem);
-    letter-spacing: 0.35em;
+    font-size: clamp(2rem, 2.8vw, 3.4rem);
+    letter-spacing: 0.45em;
     color: var(--ink);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.6rem;
+    text-indent: 0.45em;
   }
   .login-subtitle {
     color: var(--text-dim);
-    margin-bottom: 2.4rem;
-    font-size: clamp(0.85rem, 1vw, 1rem);
-    letter-spacing: 0.15em;
+    font-size: clamp(0.78rem, 0.88vw, 0.95rem);
+    letter-spacing: 0.25em;
+    text-indent: 0.25em;
   }
 
+  /* 菱形分割线 */
+  .login-divider {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 2rem 0;
+    width: 100%;
+    max-width: clamp(380px, 32vw, 500px);
+  }
+  .login-divider::before {
+    content: '';
+    flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border));
+  }
+  .login-divider::after {
+    content: '';
+    flex: 1; height: 1px;
+    background: linear-gradient(90deg, var(--border), transparent);
+  }
+  .login-divider-diamond {
+    width: 7px; height: 7px;
+    background: var(--accent);
+    transform: rotate(45deg);
+    flex-shrink: 0;
+    opacity: 0.65;
+  }
+
+  /* 登录卡片 */
   .login-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: clamp(24px, 2.4vw, 40px);
+    border-radius: 0;
+    padding: clamp(28px, 2.8vw, 44px);
     width: 100%; max-width: clamp(380px, 32vw, 500px);
     box-shadow: var(--shadow);
     position: relative;
   }
-  /* 卡片角饰 */
-  .login-card::before,
+  .login-card::before {
+    content: '';
+    position: absolute; top: 10px; left: 10px;
+    width: 22px; height: 22px;
+    border-top: 1.5px solid var(--accent);
+    border-left: 1.5px solid var(--accent);
+    opacity: 0.45;
+  }
   .login-card::after {
     content: '';
-    position: absolute;
-    width: 16px; height: 16px;
-    border-color: var(--accent);
-    border-style: solid;
-    opacity: 0.5;
+    position: absolute; bottom: 10px; right: 10px;
+    width: 22px; height: 22px;
+    border-bottom: 1.5px solid var(--accent);
+    border-right: 1.5px solid var(--accent);
+    opacity: 0.45;
   }
-  .login-card::before { top: 8px; left: 8px; border-width: 1px 0 0 1px; }
-  .login-card::after  { bottom: 8px; right: 8px; border-width: 0 1px 1px 0; }
 
   .login-card label {
     display: block;
     color: var(--text-dim);
-    font-size: 0.85rem;
-    letter-spacing: 0.08em;
-    margin-bottom: 0.65rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.18em;
+    margin-bottom: 0.75rem;
   }
 
-  .input-row { display: flex; gap: 0.65rem; margin-bottom: 1.25rem; }
+  .input-row { display: flex; gap: 0.75rem; margin-bottom: 1.25rem; }
 
   .login-card input {
     flex: 1;
     background: var(--surface2);
     border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 0.7rem 0.9rem;
+    border-radius: 0;
+    padding: 0.8rem 1rem;
     color: var(--ink);
     font-size: 0.85rem;
     font-family: 'SF Mono', 'Cascadia Code', monospace;
     outline: none;
-    transition: border-color .2s;
+    transition: border-color .25s, background .25s;
   }
-  .login-card input:focus { border-color: var(--accent); }
+  .login-card input:focus { border-color: var(--accent2); background: var(--surface); }
   .login-card input::placeholder { color: var(--border); }
 
   .btn {
     background: var(--accent2);
     color: #fff;
     border: none;
-    border-radius: 6px;
-    padding: 0.7rem 1.4rem;
-    font-size: 0.9rem;
+    border-radius: 100px;
+    padding: 0.8rem 1.6rem;
+    font-size: 0.88rem;
     font-family: var(--font-body);
-    letter-spacing: 0.15em;
+    letter-spacing: 0.2em;
     cursor: pointer;
-    transition: background .2s, transform .1s;
+    transition: background .25s, transform .15s, box-shadow .25s;
     white-space: nowrap;
   }
-  .btn:hover { background: var(--accent); }
+  .btn:hover { background: var(--accent); box-shadow: 0 8px 28px rgba(74,122,84,0.28); }
   .btn:active { transform: scale(.97); }
-  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
 
   .tip {
     color: var(--text-dim);
-    font-size: 0.78rem;
-    line-height: 2;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px dashed var(--border);
+    font-size: 0.76rem;
+    line-height: 2.1;
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
   }
 
   #login-error {
     color: var(--rust);
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     margin-top: 0.65rem;
     display: none;
     letter-spacing: 0.05em;
   }
 
-  /* ──────────────────── 顶栏 ──────────────────── */
+  /* ══════════════════════ 顶栏 ══════════════════════ */
   #dashboard { display: none; }
 
   .topbar {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 0 clamp(20px, 2.5vw, 48px);
-    height: clamp(56px, 4.5vw, 72px);
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
+    padding: 0 clamp(24px, 3vw, 56px);
+    height: clamp(64px, 5vw, 80px);
+    background: rgba(243,240,232,0.90);
+    backdrop-filter: blur(28px) saturate(1.5);
+    -webkit-backdrop-filter: blur(28px) saturate(1.5);
+    border-bottom: 1px solid var(--border-hair);
     position: sticky; top: 0; z-index: 100;
   }
+  /* 顶栏顶部金线 */
+  .topbar::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, var(--accent2) 30%, var(--gold) 55%, var(--accent) 80%, transparent 100%);
+    opacity: 0.45;
+    pointer-events: none;
+  }
 
-  .topbar-left { display: flex; align-items: center; gap: 0.9rem; }
+  .topbar-left { display: flex; align-items: center; gap: 1rem; }
 
   .topbar-seal {
-    width: clamp(30px, 2.4vw, 42px);
-    height: clamp(30px, 2.4vw, 42px);
-    border: 1.5px solid var(--rust);
-    border-radius: 3px;
+    width: clamp(46px, 3.6vw, 62px);
+    height: clamp(32px, 2.5vw, 44px);
+    border: 1.5px solid rgba(80,70,50,0.34);
+    border-radius: 0;
     display: flex; align-items: center; justify-content: center;
-    font-family: var(--font-display);
-    font-size: clamp(1rem, 1.3vw, 1.5rem);
-    color: var(--rust);
-    background: rgba(158,90,58,0.04);
+    background: rgba(240,235,220,0.50);
     flex-shrink: 0;
+    padding: 5px;
+    position: relative;
+    transition: border-color .25s, background .25s;
   }
+  .topbar-seal:hover {
+    border-color: rgba(80,70,50,0.55);
+    background: rgba(240,235,220,0.80);
+  }
+  .topbar-seal svg { width: 100%; height: 100%; display: block; }
 
   .topbar-title {
     font-family: var(--font-display);
-    font-size: clamp(1rem, 1.3vw, 1.5rem);
-    letter-spacing: 0.25em;
+    font-size: clamp(1.1rem, 1.5vw, 1.75rem);
+    letter-spacing: 0.36em;
     color: var(--ink);
+    text-indent: 0.36em;
+    display: flex;
+    align-items: baseline;
+    gap: 0.5em;
+  }
+  .topbar-en {
+    font-family: var(--font-body);
+    font-size: clamp(0.58rem, 0.65vw, 0.72rem);
+    font-weight: 300;
+    letter-spacing: 0.22em;
+    color: var(--text-dim);
+    text-indent: 0;
+    align-self: flex-end;
+    padding-bottom: 2px;
   }
 
-  /* 标签页 — 毛笔下划线风格 */
+  /* 标签页 — 毛笔收笔 */
   .tab-bar { display: flex; gap: 0; }
 
   .tab {
-    padding: 0 clamp(14px, 1.5vw, 26px);
-    height: clamp(56px, 4.5vw, 72px);
-    line-height: clamp(56px, 4.5vw, 72px);
-    font-size: clamp(0.9rem, 1.1vw, 1.15rem);
+    padding: 0 clamp(18px, 1.8vw, 32px);
+    height: clamp(64px, 5vw, 80px);
+    line-height: clamp(64px, 5vw, 80px);
+    font-size: clamp(0.95rem, 1.1vw, 1.2rem);
     font-family: var(--font-display);
-    letter-spacing: 0.2em;
+    letter-spacing: 0.3em;
+    text-indent: 0.3em;
     cursor: pointer;
     border: none;
     background: transparent;
     color: var(--text-dim);
     position: relative;
-    transition: color .2s;
+    transition: color .3s var(--ease-ink);
   }
   .tab::after {
     content: '';
     position: absolute; bottom: 0; left: 50%; right: 50%;
     height: 2px;
-    background: var(--accent2);
-    transition: left .25s, right .25s;
+    background: linear-gradient(90deg, transparent, var(--accent2), transparent);
+    transition: left .4s var(--ease-spring), right .4s var(--ease-spring);
   }
-  .tab.active { color: var(--ink); }
-  .tab.active::after { left: 20%; right: 20%; }
+  .tab.active { color: var(--ink); font-weight: 400; }
+  .tab.active::after { left: 10%; right: 10%; }
   .tab:hover:not(.active) { color: var(--ink); }
 
   .logout-btn {
     background: transparent;
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-hair);
     color: var(--text-dim);
-    border-radius: 4px;
-    padding: 0.4rem 0.9rem;
-    font-size: 0.82rem;
+    border-radius: 100px;
+    padding: 0.4rem 1.1rem;
+    font-size: 0.75rem;
     font-family: var(--font-body);
-    letter-spacing: 0.08em;
+    font-weight: 300;
+    letter-spacing: 0.18em;
+    text-indent: 0.18em;
     cursor: pointer;
-    transition: all .2s;
+    transition: all .25s;
   }
-  .logout-btn:hover { border-color: var(--accent); color: var(--accent2); }
+  .logout-btn:hover { border-color: rgba(107,156,114,0.5); color: var(--accent2); background: rgba(107,156,114,0.06); }
 
   .main-content {
-    padding: clamp(20px, 2.2vw, 40px) clamp(20px, 2.8vw, 52px);
+    padding: clamp(28px, 2.8vw, 52px) clamp(24px, 3vw, 60px);
     max-width: 1440px;
     margin: 0 auto;
   }
 
-  /* Tab pages */
   .tab-page { display: none; }
   .tab-page.active { display: block; }
 
-  /* ──────────────────── 时间维度选择器 ──────────────────── */
+  /* ══════════════════════ 时间选择器（胶囊）══════════════════════ */
   .period-selector {
-    display: flex; gap: 0;
-    margin-bottom: 24px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
+    display: flex;
+    margin-bottom: 32px;
+    border: 1px solid var(--border-hair);
+    border-radius: 100px;
     width: fit-content;
     overflow: hidden;
-    background: var(--surface);
+    background: rgba(250,248,242,0.70);
+    backdrop-filter: blur(8px);
+    padding: 3px;
+    gap: 2px;
   }
   .period-btn {
-    padding: 0.45rem 1.25rem;
+    padding: 0.40rem 1.4rem;
     border: none;
-    border-right: 1px solid var(--border);
+    border-radius: 100px;
     background: transparent;
     color: var(--text-dim);
-    font-size: clamp(0.82rem, 1vw, 1rem);
+    font-size: clamp(0.72rem, 0.82vw, 0.9rem);
     font-family: var(--font-display);
-    letter-spacing: 0.15em;
+    letter-spacing: 0.22em;
+    text-indent: 0.22em;
     cursor: pointer;
-    transition: all .2s;
+    transition: all .3s var(--ease-ink);
+    font-weight: 400;
   }
-  .period-btn:last-child { border-right: none; }
   .period-btn.active {
     background: var(--accent2);
     color: #fff;
+    box-shadow: 0 2px 14px rgba(74,122,84,0.24);
   }
-  .period-btn:hover:not(.active) { background: var(--surface2); color: var(--ink); }
+  .period-btn:hover:not(.active) { background: rgba(202,212,198,0.30); color: var(--ink); }
 
-  /* ──────────────────── 统计卡片 ──────────────────── */
+  /* ══════════════════════ 区块标题（新中式编辑排版）══════════════════════ */
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: clamp(14px, 1.6vw, 24px);
+    margin-bottom: clamp(24px, 2.4vw, 40px);
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-hair);
+    position: relative;
+  }
+  .section-head::after {
+    content: '';
+    position: absolute; bottom: -3.5px; left: 0;
+    width: 6px; height: 6px;
+    background: var(--accent2);
+    transform: rotate(45deg);
+    opacity: 0.7;
+  }
+  .section-zh {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 1.9vw, 2.4rem);
+    letter-spacing: 0.34em;
+    color: var(--ink);
+    text-indent: 0.34em;
+    font-weight: 400;
+    line-height: 1;
+  }
+  .section-en {
+    font-size: clamp(0.58rem, 0.64vw, 0.72rem);
+    letter-spacing: 0.38em;
+    color: var(--text-dim);
+    font-weight: 300;
+    align-self: flex-end;
+    padding-bottom: 3px;
+    text-indent: 0.38em;
+  }
+  .section-rule {
+    flex: 1;
+    height: 1px;
+    background: var(--border-hair);
+    align-self: center;
+  }
+
+  /* ══════════════════════ 统计卡片（新中式：数如书法，标如小印）══════════════════════ */
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(clamp(180px, 16vw, 260px), 1fr));
-    gap: clamp(12px, 1.2vw, 20px);
-    margin-bottom: clamp(20px, 2vw, 32px);
+    gap: clamp(12px, 1.3vw, 20px);
+    margin-bottom: clamp(24px, 2.4vw, 40px);
   }
 
   .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 22px 24px;
+    background: rgba(250,248,242,0.82);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border-hair);
+    border-radius: 0;
+    padding: clamp(22px, 2.2vw, 34px) clamp(24px, 2.4vw, 36px) clamp(20px, 2vw, 30px);
     position: relative;
     overflow: hidden;
-    transition: box-shadow .2s, border-color .2s;
+    transition: background .3s, box-shadow .3s, border-color .3s, transform .4s var(--ease-ink);
   }
-  .stat-card:hover { box-shadow: var(--shadow); border-color: var(--accent); }
+  .stat-card:hover {
+    background: rgba(250,248,242,0.96);
+    box-shadow: var(--shadow-hover);
+    border-color: rgba(107,156,114,0.38);
+    transform: translateY(-4px);
+  }
 
-  /* 左侧墨条 */
+  /* 顶部彩色墨线（挂轴装裱感）*/
   .stat-card::before {
     content: '';
-    position: absolute; top: 16px; left: 0;
-    width: 3px; height: calc(100% - 32px);
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 3px;
     background: var(--card-accent, var(--accent));
-    border-radius: 0 2px 2px 0;
+    opacity: 0.85;
   }
 
-  .stat-icon {
-    font-size: clamp(1.1rem, 1.4vw, 1.6rem);
-    margin-bottom: 0.9rem;
-    opacity: 0.8;
+  /* 大字水印（右下角，若隐若现）*/
+  .stat-card::after {
+    content: attr(data-char);
+    position: absolute;
+    right: 8px; bottom: -14px;
+    font-family: var(--font-display);
+    font-size: clamp(5rem, 6vw, 7.5rem);
+    color: var(--card-accent, var(--accent));
+    opacity: 0.085;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
   }
+
+  /* 隐藏 emoji 图标，让书法大字+数字做视觉主角 */
+  .stat-icon { display: none; }
+
   .stat-value {
     font-family: var(--font-display);
-    font-size: clamp(1.4rem, 1.8vw, 2rem);
+    font-size: clamp(2rem, 2.6vw, 3.2rem);
     color: var(--card-color, var(--accent2));
     line-height: 1;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.8rem;
+    letter-spacing: 0.02em;
   }
   .stat-label {
-    font-size: clamp(0.78rem, 0.85vw, 0.92rem);
+    font-size: clamp(0.60rem, 0.66vw, 0.74rem);
     color: var(--text-dim);
-    letter-spacing: 0.08em;
+    letter-spacing: 0.30em;
+    text-indent: 0.30em;
+    font-weight: 300;
   }
-  .stat-sub { font-size: clamp(0.75rem, 0.8vw, 0.88rem); color: var(--text-dim); margin-top: 0.4rem; }
+  .stat-sub {
+    font-size: clamp(0.60rem, 0.64vw, 0.72rem);
+    color: var(--text-dim);
+    margin-top: 0.55rem;
+    font-weight: 300;
+  }
 
-  /* ──────────────────── 图表区 ──────────────────── */
+  /* ══════════════════════ 图表卡片 ══════════════════════ */
   .charts-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(clamp(340px, 30vw, 560px), 1fr));
@@ -349,97 +541,143 @@
   }
 
   .chart-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: clamp(18px, 1.8vw, 32px) clamp(20px, 2vw, 36px);
+    background: rgba(250,248,242,0.78);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border-hair);
+    border-radius: 0;
+    padding: clamp(22px, 2.2vw, 38px) clamp(24px, 2.4vw, 44px);
     position: relative;
+    transition: background .3s, box-shadow .3s;
   }
-  /* 卡片四角点缀 */
-  .chart-card::before, .chart-card::after,
-  .chart-card > .corner-br, .chart-card > .corner-tl {
+  .chart-card:hover {
+    background: rgba(250,248,242,0.94);
+    box-shadow: var(--shadow);
+  }
+
+  /* 窗棂四角装饰（更精致）*/
+  .chart-card::before {
     content: '';
-    position: absolute;
-    width: 12px; height: 12px;
-    border-color: var(--border);
-    border-style: solid;
-    opacity: 0.6;
+    position: absolute; top: 10px; left: 10px;
+    width: 22px; height: 22px;
+    border-top: 1.5px solid rgba(107,156,114,0.4);
+    border-left: 1.5px solid rgba(107,156,114,0.4);
+    pointer-events: none;
+    transition: opacity .3s;
   }
-  .chart-card::before { top: 6px; left: 6px; border-width: 1px 0 0 1px; }
-  .chart-card::after  { bottom: 6px; right: 6px; border-width: 0 1px 1px 0; }
+  .chart-card::after {
+    content: '';
+    position: absolute; bottom: 10px; right: 10px;
+    width: 22px; height: 22px;
+    border-bottom: 1.5px solid rgba(107,156,114,0.4);
+    border-right: 1.5px solid rgba(107,156,114,0.4);
+    pointer-events: none;
+    transition: opacity .3s;
+  }
+  .chart-card:hover::before,
+  .chart-card:hover::after { opacity: 0.8; }
 
   .chart-header {
-    display: flex; justify-content: space-between; align-items: baseline;
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-    border-bottom: 1px dashed var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-hair);
+    position: relative;
+  }
+  .chart-header::after {
+    content: '';
+    position: absolute;
+    bottom: -3.5px; left: 0;
+    width: 5px; height: 5px;
+    background: var(--accent2);
+    transform: rotate(45deg);
+    opacity: 0.6;
+    pointer-events: none;
   }
   .chart-title {
     font-family: var(--font-display);
-    font-size: clamp(0.95rem, 1.1vw, 1.25rem);
-    letter-spacing: 0.15em;
+    font-size: clamp(1.05rem, 1.2vw, 1.4rem);
+    letter-spacing: 0.25em;
+    text-indent: 0.25em;
     color: var(--ink);
   }
   .chart-badge {
-    font-size: clamp(0.72rem, 0.78vw, 0.88rem);
+    font-size: clamp(0.60rem, 0.66vw, 0.74rem);
     color: var(--text-dim);
-    letter-spacing: 0.08em;
+    letter-spacing: 0.18em;
+    text-indent: 0.18em;
+    background: rgba(234,229,223,0.70);
+    padding: 3px 12px;
+    border-radius: 100px;
+    border: 1px solid var(--border-hair);
+    font-weight: 300;
   }
 
   .chart-wrap { position: relative; }
 
-  /* ──────────────────── 偏好分类进度条 ──────────────────── */
-  .prefer-list { display: flex; flex-direction: column; gap: 12px; }
+  /* ══════════════════════ 偏好分类进度条 ══════════════════════ */
+  .prefer-list { display: flex; flex-direction: column; gap: 14px; }
   .prefer-label {
     display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 5px;
-    font-size: clamp(0.82rem, 0.9vw, 1rem);
-    letter-spacing: 0.06em;
+    margin-bottom: 7px;
+    font-size: clamp(0.78rem, 0.86vw, 0.94rem);
+    letter-spacing: 0.10em;
+    font-weight: 300;
   }
-  .prefer-count { color: var(--text-dim); font-size: clamp(0.75rem, 0.82vw, 0.9rem); }
+  .prefer-count {
+    color: var(--text-dim);
+    font-size: clamp(0.60rem, 0.66vw, 0.74rem);
+    letter-spacing: 0.12em;
+    font-weight: 300;
+  }
   .progress-bar-wrap {
-    background: var(--surface2);
-    border-radius: 3px;
-    height: 5px;
+    background: rgba(202,212,198,0.28);
+    border-radius: 0;
+    height: 3px;
     overflow: hidden;
   }
   .progress-bar-fill {
     height: 100%;
-    border-radius: 3px;
+    border-radius: 0;
     background: linear-gradient(90deg, var(--accent2), var(--accent));
-    transition: width .9s cubic-bezier(.22,1,.36,1);
+    transition: width 1s var(--ease-ink);
+    position: relative;
   }
 
-  /* ──────────────────── 书籍排行 ──────────────────── */
-  .book-list { display: flex; flex-direction: column; gap: 10px; }
+  /* ══════════════════════ 书籍排行 ══════════════════════ */
+  .book-list { display: flex; flex-direction: column; gap: 8px; }
 
   .book-item {
-    display: flex; align-items: center; gap: 12px;
-    padding: 12px 14px;
-    border-radius: 8px;
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 18px;
+    border-radius: 0;
     border: 1px solid transparent;
-    background: var(--surface2);
-    transition: border-color .2s, background .2s;
+    background: rgba(236,233,223,0.55);
+    transition: border-color .3s, background .3s, transform .3s var(--ease-ink);
   }
-  .book-item:hover { border-color: var(--border); background: var(--surface); }
+  .book-item:hover {
+    border-color: var(--border-hair);
+    background: rgba(250,248,242,0.85);
+    transform: translateX(5px);
+  }
 
   .book-rank {
-    width: 26px; height: 26px;
-    border-radius: 4px;
+    width: 28px; height: 28px;
+    border-radius: 100px;
     display: flex; align-items: center; justify-content: center;
     font-family: var(--font-display);
-    font-size: 14px;
+    font-size: 13px;
     flex-shrink: 0;
   }
   .rank-1 { background: #c8a84b; color: #fff; }
   .rank-2 { background: #9aacb8; color: #fff; }
   .rank-3 { background: #b07848; color: #fff; }
-  .rank-other { background: var(--border); color: var(--text-dim); }
+  .rank-other { background: var(--surface); color: var(--text-dim); border: 1px solid var(--border); }
 
   .book-cover {
     width: clamp(36px, 3vw, 52px);
     height: clamp(48px, 4vw, 68px);
-    border-radius: 4px;
+    border-radius: 0;
     object-fit: cover;
     flex-shrink: 0;
     border: 1px solid var(--border);
@@ -447,63 +685,65 @@
 
   .book-info { flex: 1; min-width: 0; }
   .book-title { font-size: clamp(0.82rem, 0.92vw, 1rem); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .book-author { font-size: clamp(0.75rem, 0.82vw, 0.9rem); color: var(--text-dim); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .book-tags { display: flex; gap: 4px; margin-top: 5px; }
+  .book-author { font-size: clamp(0.73rem, 0.8vw, 0.88rem); color: var(--text-dim); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .book-tags { display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap; }
   .book-tag {
-    font-size: clamp(0.68rem, 0.72vw, 0.8rem); padding: 1px 6px;
+    font-size: clamp(0.64rem, 0.7vw, 0.78rem);
+    padding: 2px 9px;
     border: 1px solid var(--border);
-    border-radius: 3px;
+    border-radius: 100px;
     color: var(--text-dim);
     letter-spacing: 0.06em;
+    background: var(--surface);
   }
 
   .book-time { text-align: right; flex-shrink: 0; }
   .book-time > div:first-child { font-size: clamp(0.82rem, 0.92vw, 1rem); color: var(--accent2); font-weight: 600; }
-  .book-time-sub { font-size: clamp(0.7rem, 0.75vw, 0.82rem); color: var(--text-dim); margin-top: 2px; letter-spacing: 0.06em; }
+  .book-time-sub { font-size: clamp(0.68rem, 0.73vw, 0.8rem); color: var(--text-dim); margin-top: 2px; letter-spacing: 0.08em; }
 
-  /* 对比涨跌 */
   .compare-chip {
     display: inline-flex; align-items: center; gap: 3px;
-    padding: 0.15rem 0.5rem;
-    border-radius: 3px;
-    font-size: clamp(0.72rem, 0.8vw, 0.88rem);
+    padding: 0.15rem 0.6rem;
+    border-radius: 100px;
+    font-size: clamp(0.7rem, 0.78vw, 0.85rem);
     margin-top: 0.4rem;
     letter-spacing: 0.06em;
   }
   .compare-up   { background: rgba(107,156,114,0.12); color: var(--accent2); }
   .compare-down { background: rgba(158,90,58,0.10);  color: var(--rust); }
 
-  /* ──────────────────── 书架 ──────────────────── */
+  /* ══════════════════════ 书架 ══════════════════════ */
   .shelf-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(clamp(110px, 10vw, 160px), 1fr));
-    gap: clamp(14px, 1.4vw, 24px);
+    gap: clamp(16px, 1.6vw, 28px);
   }
-  .shelf-book { cursor: pointer; transition: transform .25s; text-align: center; }
-  .shelf-book:hover { transform: translateY(-5px); }
+  .shelf-book { cursor: pointer; transition: transform .3s cubic-bezier(.22,1,.36,1); text-align: center; }
+  .shelf-book:hover { transform: translateY(-6px); }
   .shelf-book img {
     width: 100%; aspect-ratio: 2/3;
     object-fit: cover;
-    border-radius: 5px;
+    border-radius: 0;
     display: block;
     border: 1px solid var(--border);
-    box-shadow: 2px 3px 8px rgba(42,56,40,0.10);
+    box-shadow: 3px 5px 16px rgba(26,40,24,0.13), 1px 2px 0 rgba(255,255,255,0.5);
     background: var(--surface2);
   }
-  .shelf-book-title { font-size: clamp(0.72rem, 0.82vw, 0.92rem); margin-top: 0.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .shelf-book-author { font-size: clamp(0.68rem, 0.75vw, 0.82rem); color: var(--text-dim); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .shelf-book-title { font-size: clamp(0.72rem, 0.82vw, 0.92rem); margin-top: 0.6rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .shelf-book-author { font-size: clamp(0.65rem, 0.72vw, 0.8rem); color: var(--text-dim); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .shelf-finish-badge {
     display: inline-block;
     margin-top: 4px;
-    font-size: clamp(0.62rem, 0.68vw, 0.78rem);
-    padding: 1px 6px;
+    font-size: clamp(0.6rem, 0.65vw, 0.75rem);
+    padding: 2px 10px;
     border: 1px solid var(--accent);
-    border-radius: 2px;
+    border-radius: 100px;
     color: var(--accent2);
     letter-spacing: 0.08em;
+    background: rgba(107,156,114,0.09);
   }
 
-  /* ──────────────────── 笔记 ──────────────────── */
+  /* ══════════════════════ 笔记 ══════════════════════ */
   .note-overview {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -511,65 +751,97 @@
     margin-bottom: 24px;
   }
   .note-stat {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 18px 20px;
+    background: rgba(250,248,242,0.82);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border-hair);
+    border-radius: 0;
+    padding: clamp(18px, 1.8vw, 28px) clamp(16px, 1.6vw, 24px);
     text-align: center;
     position: relative;
+    overflow: hidden;
+    transition: background .3s, box-shadow .3s, transform .3s var(--ease-ink);
+  }
+  .note-stat:hover {
+    background: rgba(250,248,242,0.96);
+    box-shadow: var(--shadow);
+    transform: translateY(-3px);
   }
   .note-stat::after {
     content: '';
-    position: absolute; bottom: 0; left: 20%; right: 20%;
+    position: absolute; bottom: 0; left: 0; right: 0;
     height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent2), transparent);
+    opacity: 0.7;
   }
   .note-stat-val {
     font-family: var(--font-display);
-    font-size: clamp(1.5rem, 1.9vw, 2.2rem);
+    font-size: clamp(1.8rem, 2.2vw, 2.8rem);
     color: var(--accent2);
+    line-height: 1;
   }
-  .note-stat-label { font-size: clamp(0.75rem, 0.82vw, 0.92rem); color: var(--text-dim); margin-top: 4px; letter-spacing: 0.08em; }
+  .note-stat-label {
+    font-size: clamp(0.60rem, 0.66vw, 0.72rem);
+    color: var(--text-dim);
+    margin-top: 8px;
+    letter-spacing: 0.28em;
+    text-indent: 0.28em;
+    font-weight: 300;
+  }
 
-  .note-books { display: flex; flex-direction: column; gap: 10px; }
+  .note-books { display: flex; flex-direction: column; gap: 8px; }
   .note-book-item {
-    display: flex; align-items: center; gap: 12px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 16px;
-    transition: border-color .2s;
+    display: flex; align-items: center; gap: 14px;
+    background: rgba(250,248,242,0.75);
+    border: 1px solid var(--border-hair);
+    border-radius: 0;
+    padding: 14px 20px;
+    transition: background .3s, border-color .3s, transform .3s var(--ease-ink);
   }
-  .note-book-item:hover { border-color: var(--accent); }
+  .note-book-item:hover {
+    background: rgba(250,248,242,0.96);
+    border-color: rgba(107,156,114,0.38);
+    transform: translateX(5px);
+  }
   .note-book-info { flex: 1; min-width: 0; }
   .note-book-title { font-size: clamp(0.82rem, 0.92vw, 1rem); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .note-book-author { font-size: clamp(0.75rem, 0.82vw, 0.9rem); color: var(--text-dim); margin-top: 2px; }
-  .note-counts { display: flex; gap: clamp(10px, 1.1vw, 18px); flex-shrink: 0; }
-  .note-count-item { font-size: clamp(0.72rem, 0.8vw, 0.88rem); text-align: center; color: var(--text-dim); letter-spacing: 0.06em; }
+  .note-book-author { font-size: clamp(0.73rem, 0.8vw, 0.88rem); color: var(--text-dim); margin-top: 2px; }
+  .note-counts { display: flex; gap: clamp(12px, 1.2vw, 20px); flex-shrink: 0; }
+  .note-count-item { font-size: clamp(0.7rem, 0.78vw, 0.86rem); text-align: center; color: var(--text-dim); letter-spacing: 0.08em; }
   .note-count-val { font-family: var(--font-display); font-size: clamp(1rem, 1.2vw, 1.4rem); display: block; }
 
-  /* ──────────────────── 加载 / 错误 ──────────────────── */
+  /* ══════════════════════ 加载 / 错误 ══════════════════════ */
   .loading {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 100px 0;
-    gap: 18px;
+    padding: 100px 0; gap: 20px;
   }
-  /* 水墨圆圈加载动画 */
+  /* 墨滴涟漪加载动画 */
   .spinner {
-    width: 38px; height: 38px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent2);
+    width: 10px; height: 10px;
+    background: var(--accent2);
     border-radius: 50%;
-    animation: spin .9s linear infinite;
+    border: none;
+    animation: inkDrop 1.9s var(--ease-ink) infinite;
   }
   .loading-text {
     font-family: var(--font-display);
     color: var(--text-dim);
-    letter-spacing: 0.2em;
+    letter-spacing: 0.25em;
     font-size: clamp(0.88rem, 1vw, 1.1rem);
+    animation: inkTextPulse 2.2s ease-in-out infinite;
   }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes inkDrop {
+    0%   { box-shadow: 0 0 0 0   rgba(74,122,84,0.6),
+                       0 0 0 0   rgba(74,122,84,0.3),
+                       0 0 0 0   rgba(74,122,84,0.1); }
+    100% { box-shadow: 0 0 0 16px rgba(74,122,84,0),
+                       0 0 0 30px rgba(74,122,84,0),
+                       0 0 0 46px rgba(74,122,84,0); }
+  }
+  @keyframes inkTextPulse {
+    0%,100% { opacity: 0.5; }
+    50%     { opacity: 0.9; }
+  }
 
   .error-msg {
     text-align: center; padding: 60px;
@@ -578,7 +850,132 @@
     letter-spacing: 0.15em;
   }
 
-  /* ──────────────────── 响应式 ──────────────────── */
+  /* ══════════════════════ 动效系统 ══════════════════════ */
+
+  /* ── 关键帧 ── */
+  @keyframes inkFadeUp {
+    from { opacity: 0; transform: translateY(22px); filter: blur(2px); }
+    to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+  }
+  @keyframes inkScaleUp {
+    from { opacity: 0; transform: scale(0.96) translateY(16px); filter: blur(1px); }
+    to   { opacity: 1; transform: scale(1)    translateY(0);    filter: blur(0); }
+  }
+  @keyframes inkSlideRight {
+    from { opacity: 0; transform: translateX(-16px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes inkShelfReveal {
+    from { opacity: 0; transform: translateY(20px) scale(0.93); filter: blur(1px); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);    filter: blur(0); }
+  }
+  @keyframes sealBreath {
+    0%,100% { border-color: rgba(158,90,58,0.38); box-shadow: none; }
+    50%     { border-color: rgba(158,90,58,0.68); box-shadow: 0 0 28px rgba(158,90,58,0.13); }
+  }
+  @keyframes cardFloat {
+    from { opacity: 0; transform: translateY(32px) scale(0.975); filter: blur(3px); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);     filter: blur(0); }
+  }
+  @keyframes shimmerSweep {
+    from { transform: translateX(-160%); }
+    to   { transform: translateX(260%); }
+  }
+  @keyframes tabReveal {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── 登录页入场（水墨漂浮节奏）── */
+  .login-seal     { animation: inkFadeUp var(--dur-slow) var(--ease-ink) 0.1s both,
+                               sealBreath 3.8s ease-in-out 1.8s infinite; }
+  .login-title    { animation: inkFadeUp var(--dur-slow) var(--ease-ink) 0.3s both; }
+  .login-subtitle { animation: inkFadeUp var(--dur-slow) var(--ease-ink) 0.45s both; }
+  .login-divider  { animation: inkFadeUp calc(var(--dur-slow) * 0.8) var(--ease-ink) 0.58s both; }
+  .login-card     { animation: cardFloat var(--dur-ink) var(--ease-ink) 0.55s both; }
+
+  /* ── Tab 页切换淡入 ── */
+  .tab-page.active { animation: tabReveal var(--dur-slow) var(--ease-ink) both; }
+
+  /* ── 统计卡片（动态注入后触发）── */
+  .stat-card.anim-in {
+    animation: inkFadeUp var(--dur-slow) var(--ease-ink) both;
+    animation-delay: var(--delay, 0ms);
+  }
+
+  /* ── 图表卡片（默认隐藏，触发后显现）── */
+  .chart-card {
+    opacity: 0;
+    transform: scale(0.97) translateY(14px);
+    filter: blur(1px);
+  }
+  .chart-card.anim-in {
+    animation: inkScaleUp var(--dur-ink) var(--ease-ink) both;
+    animation-delay: var(--delay, 0ms);
+  }
+
+  /* ── 偏好分类项 ── */
+  .prefer-item.anim-in {
+    animation: inkFadeUp var(--dur-slow) var(--ease-ink) both;
+    animation-delay: var(--delay, 0ms);
+  }
+
+  /* ── 书籍列表项 ── */
+  .book-item.anim-in {
+    animation: inkSlideRight var(--dur-slow) var(--ease-ink) both;
+    animation-delay: var(--delay, 0ms);
+  }
+
+  /* ── 书架书籍（级联瀑布）── */
+  .shelf-book.anim-in {
+    animation: inkShelfReveal var(--dur-slow) var(--ease-ink) both;
+    animation-delay: var(--delay, 0ms);
+  }
+
+  /* ── 笔记统计 ── */
+  .note-stat.anim-in {
+    animation: inkFadeUp var(--dur-slow) var(--ease-ink) both;
+    animation-delay: var(--delay, 0ms);
+  }
+
+  /* ── 笔记书籍列表 ── */
+  .note-book-item.anim-in {
+    animation: inkSlideRight var(--dur-slow) var(--ease-ink) both;
+    animation-delay: var(--delay, 0ms);
+  }
+
+  /* ── 进度条光泽扫描 ── */
+  .progress-bar-wrap {
+    position: relative;
+    overflow: hidden;
+  }
+  .progress-bar-wrap::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.58) 50%, transparent 100%);
+    transform: translateX(-160%);
+    animation: shimmerSweep 2.8s var(--ease-out) 1.6s infinite;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* ── 顶栏滚动增强 ── */
+  .topbar { transition: box-shadow var(--dur-normal) var(--ease-ink); }
+  .topbar.scrolled {
+    box-shadow: 0 1px 0 var(--border), 0 6px 32px rgba(26,40,24,0.10);
+  }
+
+  /* prefers-reduced-motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+    body::after { display: none; }
+  }
+
+  /* ══════════════════════ 响应式 ══════════════════════ */
   @media (max-width: 768px) {
     .topbar { padding: 0 16px; }
     .tab { padding: 0 14px; font-size: 14px; letter-spacing: 2px; }
@@ -595,7 +992,7 @@
 <div id="login-screen">
 
   <!-- 水墨竹叶装饰 -->
-  <svg class="ink-deco" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg class="ink-deco" style="top:0;right:0;width:320px;height:320px" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M280 10 Q240 60 200 40 Q180 30 170 50 Q160 70 180 90 Q200 110 160 130 Q130 145 140 170 Q150 195 120 210" stroke="#4a7a54" stroke-width="1.5" fill="none"/>
     <ellipse cx="230" cy="48" rx="28" ry="10" transform="rotate(-35 230 48)" fill="#4a7a54" opacity="0.6"/>
     <ellipse cx="185" cy="75" rx="24" ry="9"  transform="rotate(-20 185 75)" fill="#4a7a54" opacity="0.5"/>
@@ -605,9 +1002,37 @@
     <circle cx="40" cy="240" r="25" fill="#6b9c72" opacity="0.06"/>
   </svg>
 
-  <div class="login-seal"></div>
-  <div class="login-title">丹青阅览</div>
-  <div class="login-subtitle">微信读书 · 数据可视化</div>
+  <div class="login-seal">
+    <!-- 书卷 SVG v2 — 古风清淡·印章质感 -->
+    <!-- 色系：宣纸暖白(受光) / 草木灰(暗面) / 墨铁(木轴) 三色构成 -->
+    <svg viewBox="0 0 100 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- ① 轻投影（宣纸落地感） -->
+      <ellipse cx="50" cy="60.5" rx="24" ry="3" fill="#3a2e1e" opacity="0.07"/>
+      <!-- ② 纸卷背面弧线：最深暗调，草木灰 -->
+      <ellipse cx="50" cy="50.5" rx="23.5" ry="7" fill="#9e9888"/>
+      <!-- ③ 纸卷主体圆柱：中间调，旧帛色 -->
+      <rect x="26.5" y="22" width="47" height="28.5" fill="#c4baa4"/>
+      <!-- ④ 纸卷正面弧：受光面，宣纸白 -->
+      <ellipse cx="50" cy="22" rx="23.5" ry="7" fill="#ddd5be"/>
+      <!-- ⑤ 纸层同心圆（由外到内渐亮，暗示卷绕年轮） -->
+      <ellipse cx="50" cy="22" rx="17"  ry="4.8" fill="#e4ddc8" opacity="0.80"/>
+      <ellipse cx="50" cy="22" rx="10.5" ry="2.9" fill="#ece6d2" opacity="0.72"/>
+      <ellipse cx="50" cy="22" rx="5"   ry="1.4" fill="#f2edd8" opacity="0.62"/>
+      <!-- ⑥ 左端木轴：深墨铁色，轴端超出纸卷上下边缘强调体积 -->
+      <ellipse cx="26.5" cy="36.5" rx="5.5" ry="16" fill="#2a2318"/>
+      <!-- 左轴受光高光 -->
+      <ellipse cx="25"   cy="32"   rx="1.6" ry="5.2" fill="#48402e" opacity="0.45"/>
+      <!-- ⑦ 右端木轴 -->
+      <ellipse cx="73.5" cy="36.5" rx="5.5" ry="16" fill="#2a2318"/>
+      <ellipse cx="72"   cy="32"   rx="1.6" ry="5.2" fill="#48402e" opacity="0.45"/>
+    </svg>
+  </div>
+  <div class="login-title">翻页里程</div>
+  <div class="login-subtitle">ReadMap · 微信读书数据可视化</div>
+
+  <div class="login-divider">
+    <div class="login-divider-diamond"></div>
+  </div>
 
   <div class="login-card">
     <label>请输入微信读书 API Key</label>
@@ -630,8 +1055,23 @@
 <div id="dashboard">
   <div class="topbar">
     <div class="topbar-left">
-      <div class="topbar-seal">閲</div>
-      <div class="topbar-title">丹青阅览</div>
+      <div class="topbar-seal">
+        <!-- 同款书卷 mini 版，同色系 -->
+        <svg viewBox="0 0 100 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="50" cy="60.5" rx="24" ry="3"   fill="#3a2e1e" opacity="0.07"/>
+          <ellipse cx="50" cy="50.5" rx="23.5" ry="7" fill="#9e9888"/>
+          <rect x="26.5" y="22" width="47" height="28.5" fill="#c4baa4"/>
+          <ellipse cx="50" cy="22" rx="23.5" ry="7"   fill="#ddd5be"/>
+          <ellipse cx="50" cy="22" rx="17"   ry="4.8" fill="#e4ddc8" opacity="0.80"/>
+          <ellipse cx="50" cy="22" rx="10.5" ry="2.9" fill="#ece6d2" opacity="0.72"/>
+          <ellipse cx="50" cy="22" rx="5"    ry="1.4" fill="#f2edd8" opacity="0.62"/>
+          <ellipse cx="26.5" cy="36.5" rx="5.5" ry="16" fill="#2a2318"/>
+          <ellipse cx="25"   cy="32"   rx="1.6" ry="5.2" fill="#48402e" opacity="0.45"/>
+          <ellipse cx="73.5" cy="36.5" rx="5.5" ry="16" fill="#2a2318"/>
+          <ellipse cx="72"   cy="32"   rx="1.6" ry="5.2" fill="#48402e" opacity="0.45"/>
+        </svg>
+      </div>
+      <div class="topbar-title">翻页里程<span class="topbar-en">ReadMap</span></div>
     </div>
     <div class="tab-bar">
       <button class="tab active" onclick="switchTab('overview')">概 览</button>
@@ -650,6 +1090,12 @@
         <div class="loading-text">正在翻阅书页…</div>
       </div>
       <div id="overview-content" style="display:none">
+
+        <div class="section-head">
+          <span class="section-zh">读书概览</span>
+          <span class="section-en">READING · OVERVIEW</span>
+          <span class="section-rule"></span>
+        </div>
 
         <div class="period-selector">
           <button class="period-btn active" data-mode="monthly" onclick="changePeriod('monthly',this)">本月</button>
@@ -709,6 +1155,11 @@
         <div class="loading-text">正在整理书架…</div>
       </div>
       <div id="shelf-content" style="display:none">
+        <div class="section-head">
+          <span class="section-zh">我的书架</span>
+          <span class="section-en">MY · BOOKSHELF</span>
+          <span class="section-rule"></span>
+        </div>
         <div class="stats-grid" id="shelf-stat-cards"></div>
         <div class="shelf-grid" id="shelf-grid"></div>
       </div>
@@ -722,6 +1173,11 @@
         <div class="loading-text">正在摘录笔墨…</div>
       </div>
       <div id="notes-content" style="display:none">
+        <div class="section-head">
+          <span class="section-zh">笔墨留痕</span>
+          <span class="section-en">NOTES · HIGHLIGHTS</span>
+          <span class="section-rule"></span>
+        </div>
         <div class="note-overview" id="note-overview-stats"></div>
         <div class="chart-card" style="margin-bottom:20px">
           <div class="chart-header">
@@ -742,7 +1198,7 @@
 // ════════════════════════════════════════
 //  Config & State
 // ════════════════════════════════════════
-const GATEWAY = '/api'; // 通过本地代理转发，避免 CORS
+const GATEWAY = '/api';
 const SKILL_VERSION = '1.0.3';
 
 let apiKey = '';
@@ -751,6 +1207,71 @@ let currentMode = 'monthly';
 let cachedReadData = {};
 let shelfLoaded = false;
 let notesLoaded = false;
+
+// ════════════════════════════════════════
+//  Anima — 水墨动效系统（DNA: meditative-ink）
+// ════════════════════════════════════════
+const Anima = {
+  prefersReduced: false,
+
+  init() {
+    this.prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  },
+
+  // 交错入场：给一组元素依次添加 anim-in + --delay
+  stagger(elements, stepMs, baseMs) {
+    stepMs = stepMs || 80; baseMs = baseMs || 0;
+    if (this.prefersReduced) { elements.forEach(el => el.classList.add('anim-in')); return; }
+    elements.forEach((el, i) => {
+      el.style.setProperty('--delay', (baseMs + i * stepMs) + 'ms');
+      el.classList.add('anim-in');
+    });
+  },
+
+  // 图表卡片触发（在父容器 display:block 后的下一帧）
+  revealChartCards(tabId, delayMs) {
+    if (this.prefersReduced) {
+      document.querySelectorAll(`#${tabId} .chart-card`).forEach(c => c.classList.add('anim-in'));
+      return;
+    }
+    requestAnimationFrame(() => {
+      document.querySelectorAll(`#${tabId} .chart-card:not(.anim-in)`).forEach((card, i) => {
+        card.style.setProperty('--delay', (delayMs || 0) + i * 100 + 'ms');
+        card.classList.add('anim-in');
+      });
+    });
+  },
+
+  // 数字计数动画（仅对整数有效）
+  countUp(el, target, suffix, duration) {
+    if (this.prefersReduced || isNaN(target) || target <= 0) return;
+    suffix = suffix || ''; duration = duration || 1100;
+    const start = performance.now();
+    const tick = now => {
+      const t = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = Math.floor(eased * target) + suffix;
+      if (t < 1) requestAnimationFrame(tick);
+      else el.textContent = target + suffix;
+    };
+    el.textContent = '0' + suffix;
+    requestAnimationFrame(tick);
+  },
+
+  // 进度条：先 width:0 插入，然后延迟触发 transition
+  animBars(container, delayBase) {
+    delayBase = delayBase || 120;
+    if (this.prefersReduced) {
+      container.querySelectorAll('.progress-bar-fill[data-pct]').forEach(b => { b.style.width = b.dataset.pct + '%'; });
+      return;
+    }
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      container.querySelectorAll('.progress-bar-fill[data-pct]').forEach((bar, i) => {
+        setTimeout(() => { bar.style.width = bar.dataset.pct + '%'; }, delayBase + i * 65);
+      });
+    }));
+  }
+};
 
 // ════════════════════════════════════════
 //  API helper
@@ -858,6 +1379,8 @@ function switchTab(name) {
   event.target.classList.add('active');
   if (name === 'shelf' && !shelfLoaded) loadShelf();
   if (name === 'notes' && !notesLoaded) loadNotes();
+  // 切换后触发该 tab 内尚未显现的图表卡片
+  setTimeout(() => Anima.revealChartCards('tab-' + name, 60), 80);
 }
 
 function changePeriod(mode, btn) {
@@ -883,6 +1406,8 @@ async function loadOverview(mode) {
     renderOverview(data, mode);
     document.getElementById('overview-loading').style.display = 'none';
     document.getElementById('overview-content').style.display = 'block';
+    // 内容显现后触发图表卡片动画
+    Anima.revealChartCards('tab-overview', 80);
   } catch(e) {
     document.getElementById('overview-loading').style.display = 'none';
     document.getElementById('overview-error').style.display = 'block';
@@ -915,21 +1440,32 @@ function renderStatCards(d, mode) {
     compareHtml = `<span class="compare-chip ${up ? 'compare-up' : 'compare-down'}">${up ? '↑' : '↓'} ${pct}% 较上期</span>`;
   }
 
+  const noteVal = readStat.find(s=>s.stat==='笔记')?.counts || '--';
   const cards = [
-    { icon: '⏱', value: fmtSec(totalSec),          label: '总阅读时长',   sub: compareHtml,                                  accent: '#6b9c72', color: '#4a7a54' },
-    { icon: '📅', value: `${days} 天`,              label: '有效阅读天数', sub: mode === 'overall' ? '' : `日均 ${fmtSec(avgSec)}`, accent: '#8aac72', color: '#4a7a54' },
-    { icon: '📖', value: readOver,                  label: '读过书籍',     sub: `已读完 ${readDone}`,                         accent: '#a8803a', color: '#a8803a' },
-    { icon: '✍',  value: readStat.find(s=>s.stat==='笔记')?.counts||'--', label:'笔记总数', sub:'', accent:'#9e5a3a', color:'#9e5a3a' },
+    { icon: '⏱', value: fmtSec(totalSec), label: '总阅读时长',   sub: compareHtml,                                      accent: '#6b9c72', color: '#4a7a54', char: '時', countTo: null,                          countSuffix: '' },
+    { icon: '📅', value: `${days} 天`,    label: '有效阅读天数', sub: mode === 'overall' ? '' : `日均 ${fmtSec(avgSec)}`, accent: '#8aac72', color: '#4a7a54', char: '日', countTo: days,                          countSuffix: ' 天' },
+    { icon: '📖', value: readOver,         label: '读过书籍',     sub: `已读完 ${readDone}`,                             accent: '#a8803a', color: '#a8803a', char: '書', countTo: parseInt(readOver) || null,    countSuffix: '' },
+    { icon: '✍',  value: noteVal,          label: '笔记总数',     sub: '',                                               accent: '#9e5a3a', color: '#9e5a3a', char: '記', countTo: parseInt(noteVal) || null,     countSuffix: '' },
   ];
 
   document.getElementById('stat-cards').innerHTML = cards.map(c => `
-    <div class="stat-card" style="--card-accent:${c.accent};--card-color:${c.color}">
+    <div class="stat-card" style="--card-accent:${c.accent};--card-color:${c.color}" data-char="${c.char}">
       <div class="stat-icon">${c.icon}</div>
-      <div class="stat-value">${c.value}</div>
+      <div class="stat-value"${c.countTo ? ` data-count="${c.countTo}" data-suffix="${c.countSuffix}"` : ''}>${c.value}</div>
       <div class="stat-label">${c.label}</div>
       ${c.sub ? `<div class="stat-sub">${c.sub}</div>` : ''}
     </div>
   `).join('');
+
+  // 交错入场 + 数字计数
+  const statEls = document.querySelectorAll('#stat-cards .stat-card');
+  Anima.stagger(Array.from(statEls), 90);
+  statEls.forEach((card, i) => {
+    const countEl = card.querySelector('[data-count]');
+    if (countEl) {
+      setTimeout(() => Anima.countUp(countEl, +countEl.dataset.count, countEl.dataset.suffix), i * 90 + 420);
+    }
+  });
 }
 
 function renderReadTimesChart(d, mode) {
@@ -958,7 +1494,7 @@ function renderReadTimesChart(d, mode) {
     type: 'bar',
     data: {
       labels,
-      datasets: [{ data: values, backgroundColor: INK.bar, borderColor: INK.barBorder, borderWidth: 1.5, borderRadius: 4, borderSkipped: false }]
+      datasets: [{ data: values, backgroundColor: INK.bar, borderColor: INK.barBorder, borderWidth: 1.5, borderRadius: 2, borderSkipped: false }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -1031,10 +1567,14 @@ function renderPreferCategories(d) {
           <span class="prefer-count">${c.readingCount}本 · ${fmtSec(c.readingTime||0)}</span>
         </div>
         <div class="progress-bar-wrap">
-          <div class="progress-bar-fill" style="width:${pct}%"></div>
+          <div class="progress-bar-fill" data-pct="${pct}" style="width:0"></div>
         </div>
       </div>`;
   }).join('');
+
+  // 偏好项交错入场 + 进度条动画
+  Anima.stagger(Array.from(el.querySelectorAll('.prefer-item')), 55);
+  Anima.animBars(el, 130);
 }
 
 function renderReadLongest(d) {
@@ -1065,6 +1605,8 @@ function renderReadLongest(d) {
         </div>
       </div>`;
   }).join('');
+
+  Anima.stagger(Array.from(el.querySelectorAll('.book-item')), 75);
 }
 
 // ════════════════════════════════════════
@@ -1094,29 +1636,37 @@ function renderShelf(data) {
   books.forEach(b => { const cat = b.category || '其他'; categories[cat] = (categories[cat]||0)+1; });
   const topCat = Object.entries(categories).sort((a,b)=>b[1]-a[1])[0];
 
+  const catCount = Object.keys(categories).length;
   document.getElementById('shelf-stat-cards').innerHTML = `
-    <div class="stat-card" style="--card-accent:#6b9c72;--card-color:#4a7a54">
+    <div class="stat-card" style="--card-accent:#6b9c72;--card-color:#4a7a54" data-char="架">
       <div class="stat-icon">📚</div>
-      <div class="stat-value">${total}</div>
+      <div class="stat-value" data-count="${total}" data-suffix="">${total}</div>
       <div class="stat-label">书架总数</div>
       <div class="stat-sub">电子书 ${books.length} · 有声书 ${albums.length}${mp ? ' · 文章1' : ''}</div>
     </div>
-    <div class="stat-card" style="--card-accent:#8aac72;--card-color:#4a7a54">
+    <div class="stat-card" style="--card-accent:#8aac72;--card-color:#4a7a54" data-char="完">
       <div class="stat-icon">✅</div>
-      <div class="stat-value">${finished}</div>
+      <div class="stat-value" data-count="${finished}" data-suffix="">${finished}</div>
       <div class="stat-label">已读完</div>
       <div class="stat-sub">完成率 ${books.length ? Math.round(finished/books.length*100) : 0}%</div>
     </div>
-    <div class="stat-card" style="--card-accent:#a8803a;--card-color:#a8803a">
+    <div class="stat-card" style="--card-accent:#a8803a;--card-color:#a8803a" data-char="类">
       <div class="stat-icon">🗂</div>
-      <div class="stat-value">${Object.keys(categories).length}</div>
+      <div class="stat-value" data-count="${catCount}" data-suffix="">${catCount}</div>
       <div class="stat-label">书籍分类数</div>
       <div class="stat-sub">最多：${topCat ? topCat[0] : '--'}</div>
     </div>
   `;
+  const shelfStatEls = document.querySelectorAll('#shelf-stat-cards .stat-card');
+  Anima.stagger(Array.from(shelfStatEls), 90);
+  shelfStatEls.forEach((card, i) => {
+    const el2 = card.querySelector('[data-count]');
+    if (el2) setTimeout(() => Anima.countUp(el2, +el2.dataset.count, el2.dataset.suffix), i * 90 + 400);
+  });
 
   const sorted = [...books].sort((a,b) => (b.readUpdateTime||0) - (a.readUpdateTime||0));
-  document.getElementById('shelf-grid').innerHTML =
+  const shelfGridEl = document.getElementById('shelf-grid');
+  shelfGridEl.innerHTML =
     sorted.map(b => `
       <div class="shelf-book" title="${b.title}">
         <img src="${b.cover||''}" alt="${b.title}" loading="lazy" onerror="this.style.background='var(--surface2)'">
@@ -1133,6 +1683,9 @@ function renderShelf(data) {
           <div class="shelf-book-author">🎧 ${info.authorName||''}</div>
         </div>`;
     }).join('');
+
+  // 书架书籍瀑布入场（每本间隔 28ms，快速级联）
+  Anima.stagger(Array.from(shelfGridEl.querySelectorAll('.shelf-book')), 28);
 }
 
 // ════════════════════════════════════════
@@ -1171,13 +1724,23 @@ function renderNotes(books) {
     totalBookmarks  += b.bookmarkCount|| 0;
   });
 
-  document.getElementById('note-overview-stats').innerHTML = `
-    <div class="note-stat"><div class="note-stat-val">${totalNotes}</div><div class="note-stat-label">笔记总数</div></div>
-    <div class="note-stat"><div class="note-stat-val">${totalHighlights}</div><div class="note-stat-label">划线数</div></div>
-    <div class="note-stat"><div class="note-stat-val">${totalReviews}</div><div class="note-stat-label">想法/点评</div></div>
-    <div class="note-stat"><div class="note-stat-val">${totalBookmarks}</div><div class="note-stat-label">书签数</div></div>
-    <div class="note-stat"><div class="note-stat-val">${books.length}</div><div class="note-stat-label">有笔记书籍</div></div>
-  `;
+  const noteStatsData = [
+    [totalNotes,      '笔记总数'],
+    [totalHighlights, '划线数'],
+    [totalReviews,    '想法 / 点评'],
+    [totalBookmarks,  '书签数'],
+    [books.length,    '有笔记书籍'],
+  ];
+  const noteOverviewEl = document.getElementById('note-overview-stats');
+  noteOverviewEl.innerHTML = noteStatsData.map(([v,l]) =>
+    `<div class="note-stat"><div class="note-stat-val" data-count="${v}" data-suffix="">${v}</div><div class="note-stat-label">${l}</div></div>`
+  ).join('');
+  const noteStatEls = noteOverviewEl.querySelectorAll('.note-stat');
+  Anima.stagger(Array.from(noteStatEls), 65);
+  noteStatEls.forEach((s, i) => {
+    const el2 = s.querySelector('[data-count]');
+    if (el2) setTimeout(() => Anima.countUp(el2, +el2.dataset.count, ''), i * 65 + 380);
+  });
 
   const sorted = [...books].sort((a,b) =>
     ((b.reviewCount||0)+(b.noteCount||0)+(b.bookmarkCount||0)) -
@@ -1190,9 +1753,9 @@ function renderNotes(books) {
     data: {
       labels: top10.map(b => (b.book?.title||'未知').slice(0,10)),
       datasets: [
-        { label:'划线',  data: top10.map(b=>b.noteCount||0),     backgroundColor: INK.highlight, borderRadius: 3 },
-        { label:'想法',  data: top10.map(b=>b.reviewCount||0),   backgroundColor: INK.review,    borderRadius: 3 },
-        { label:'书签',  data: top10.map(b=>b.bookmarkCount||0), backgroundColor: INK.bookmark,  borderRadius: 3 },
+        { label:'划线',  data: top10.map(b=>b.noteCount||0),     backgroundColor: INK.highlight, borderRadius: 2 },
+        { label:'想法',  data: top10.map(b=>b.reviewCount||0),   backgroundColor: INK.review,    borderRadius: 2 },
+        { label:'书签',  data: top10.map(b=>b.bookmarkCount||0), backgroundColor: INK.bookmark,  borderRadius: 2 },
       ]
     },
     options: {
@@ -1205,11 +1768,14 @@ function renderNotes(books) {
     }
   });
 
+  // 笔记图表卡片入场
+  setTimeout(() => Anima.revealChartCards('tab-notes', 60), 200);
+
   document.getElementById('note-books-list').innerHTML = sorted.slice(0,20).map(b => {
     const info = b.book || {};
     return `
       <div class="note-book-item">
-        ${info.cover ? `<img class="book-cover" src="${info.cover}" style="width:36px;height:48px;border-radius:4px;border:1px solid var(--border)" onerror="this.style.display='none'">` : ''}
+        ${info.cover ? `<img class="book-cover" src="${info.cover}" style="width:36px;height:48px;border-radius:0;border:1px solid var(--border)" onerror="this.style.display='none'">` : ''}
         <div class="note-book-info">
           <div class="note-book-title">${info.title||'未知'}</div>
           <div class="note-book-author">${info.author||''}</div>
@@ -1221,17 +1787,42 @@ function renderNotes(books) {
         </div>
       </div>`;
   }).join('');
+
+  // 笔记书籍列表交错入场
+  Anima.stagger(Array.from(document.querySelectorAll('#note-books-list .note-book-item')), 40);
 }
 
 // ════════════════════════════════════════
 //  Init
 // ════════════════════════════════════════
 (function init() {
+  Anima.init();
+
   const saved = localStorage.getItem('wrk');
   if (saved) document.getElementById('api-key-input').value = saved;
   document.getElementById('api-key-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') connect();
   });
+
+  // 顶栏滚动增强
+  window.addEventListener('scroll', () => {
+    const tb = document.querySelector('.topbar');
+    if (tb) tb.classList.toggle('scrolled', window.scrollY > 8);
+  }, { passive: true });
+
+  // 竹叶 SVG 路径描绘动画
+  if (!Anima.prefersReduced) {
+    const bamboo = document.querySelector('#login-screen svg path:first-child');
+    if (bamboo) {
+      try {
+        const len = bamboo.getTotalLength();
+        bamboo.style.strokeDasharray = len;
+        bamboo.style.strokeDashoffset = len;
+        bamboo.style.transition = 'stroke-dashoffset 2.4s cubic-bezier(.16,1,.3,1) 0.9s';
+        requestAnimationFrame(() => requestAnimationFrame(() => { bamboo.style.strokeDashoffset = '0'; }));
+      } catch(e) {}
+    }
+  }
 })();
 </script>
 </body>
