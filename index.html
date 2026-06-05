@@ -1006,25 +1006,30 @@
     <!-- 书卷 SVG v2 — 古风清淡·印章质感 -->
     <!-- 色系：宣纸暖白(受光) / 草木灰(暗面) / 墨铁(木轴) 三色构成 -->
     <svg viewBox="0 0 100 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- ① 轻投影（宣纸落地感） -->
-      <ellipse cx="50" cy="60.5" rx="24" ry="3" fill="#3a2e1e" opacity="0.07"/>
-      <!-- ② 纸卷背面弧线：最深暗调，草木灰 -->
-      <ellipse cx="50" cy="50.5" rx="23.5" ry="7" fill="#9e9888"/>
-      <!-- ③ 纸卷主体圆柱：中间调，旧帛色 -->
-      <rect x="26.5" y="22" width="47" height="28.5" fill="#c4baa4"/>
-      <!-- ④ 纸卷正面弧：受光面，宣纸白 -->
-      <ellipse cx="50" cy="22" rx="23.5" ry="7" fill="#ddd5be"/>
-      <!-- ⑤ 纸层同心圆（由外到内渐亮，暗示卷绕年轮） -->
-      <ellipse cx="50" cy="22" rx="17"  ry="4.8" fill="#e4ddc8" opacity="0.80"/>
-      <ellipse cx="50" cy="22" rx="10.5" ry="2.9" fill="#ece6d2" opacity="0.72"/>
-      <ellipse cx="50" cy="22" rx="5"   ry="1.4" fill="#f2edd8" opacity="0.62"/>
-      <!-- ⑥ 左端木轴：深墨铁色，轴端超出纸卷上下边缘强调体积 -->
-      <ellipse cx="26.5" cy="36.5" rx="5.5" ry="16" fill="#2a2318"/>
-      <!-- 左轴受光高光 -->
-      <ellipse cx="25"   cy="32"   rx="1.6" ry="5.2" fill="#48402e" opacity="0.45"/>
-      <!-- ⑦ 右端木轴 -->
-      <ellipse cx="73.5" cy="36.5" rx="5.5" ry="16" fill="#2a2318"/>
-      <ellipse cx="72"   cy="32"   rx="1.6" ry="5.2" fill="#48402e" opacity="0.45"/>
+      <!-- 地面投影 -->
+      <ellipse cx="50" cy="62" rx="25" ry="2" fill="#18080a" opacity="0.10"/>
+      <!-- 纸卷背面暗弧（呈现卷轴厚度与深度） -->
+      <ellipse cx="50" cy="51" rx="29.5" ry="8.5" fill="#a49070"/>
+      <!-- 纸卷主体 -->
+      <rect x="20.5" y="21" width="59" height="30" fill="#c4ae88"/>
+      <!-- 纸页纹路：横向弧线，笔触质感 -->
+      <path d="M25,27.5 C40,27 60,27 75,27.5" stroke="#a09070" stroke-width="0.65" fill="none" opacity="0.50"/>
+      <path d="M25,32.5 C40,32 60,32 75,32.5" stroke="#a09070" stroke-width="0.60" fill="none" opacity="0.44"/>
+      <path d="M25,37.5 C40,37 60,37 75,37.5" stroke="#a09070" stroke-width="0.58" fill="none" opacity="0.38"/>
+      <path d="M25,42.5 C40,42 60,42 75,42.5" stroke="#a09070" stroke-width="0.55" fill="none" opacity="0.32"/>
+      <path d="M25,47.5 C40,47 60,47 75,47.5" stroke="#a09070" stroke-width="0.50" fill="none" opacity="0.25"/>
+      <!-- 纸卷正面受光面 -->
+      <ellipse cx="50" cy="21" rx="29.5" ry="8.5" fill="#d4bc98"/>
+      <!-- 卷绕年轮：由外到内渐亮，清晰传达卷纸结构 -->
+      <ellipse cx="50" cy="21" rx="21"   ry="6.0"  fill="#dcc8a4" opacity="0.86"/>
+      <ellipse cx="50" cy="21" rx="13.5" ry="3.8"  fill="#e4d4b0" opacity="0.80"/>
+      <ellipse cx="50" cy="21" rx="6.5"  ry="1.85" fill="#ecdcba" opacity="0.72"/>
+      <!-- 左木轴：深墨褐，粗壮有分量，明显超出纸卷上下 -->
+      <ellipse cx="20.5" cy="36" rx="7.5" ry="22" fill="#1e1008"/>
+      <ellipse cx="18.8" cy="31" rx="2.2" ry="7"  fill="#483820" opacity="0.40"/>
+      <!-- 右木轴 -->
+      <ellipse cx="79.5" cy="36" rx="7.5" ry="22" fill="#1e1008"/>
+      <ellipse cx="77.8" cy="31" rx="2.2" ry="7"  fill="#483820" opacity="0.40"/>
     </svg>
   </div>
   <div class="login-title">翻页里程</div>
@@ -1058,17 +1063,22 @@
       <div class="topbar-seal">
         <!-- 同款书卷 mini 版，同色系 -->
         <svg viewBox="0 0 100 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <ellipse cx="50" cy="60.5" rx="24" ry="3"   fill="#3a2e1e" opacity="0.07"/>
-          <ellipse cx="50" cy="50.5" rx="23.5" ry="7" fill="#9e9888"/>
-          <rect x="26.5" y="22" width="47" height="28.5" fill="#c4baa4"/>
-          <ellipse cx="50" cy="22" rx="23.5" ry="7"   fill="#ddd5be"/>
-          <ellipse cx="50" cy="22" rx="17"   ry="4.8" fill="#e4ddc8" opacity="0.80"/>
-          <ellipse cx="50" cy="22" rx="10.5" ry="2.9" fill="#ece6d2" opacity="0.72"/>
-          <ellipse cx="50" cy="22" rx="5"    ry="1.4" fill="#f2edd8" opacity="0.62"/>
-          <ellipse cx="26.5" cy="36.5" rx="5.5" ry="16" fill="#2a2318"/>
-          <ellipse cx="25"   cy="32"   rx="1.6" ry="5.2" fill="#48402e" opacity="0.45"/>
-          <ellipse cx="73.5" cy="36.5" rx="5.5" ry="16" fill="#2a2318"/>
-          <ellipse cx="72"   cy="32"   rx="1.6" ry="5.2" fill="#48402e" opacity="0.45"/>
+          <ellipse cx="50" cy="62" rx="25" ry="2" fill="#18080a" opacity="0.10"/>
+          <ellipse cx="50" cy="51" rx="29.5" ry="8.5" fill="#a49070"/>
+          <rect x="20.5" y="21" width="59" height="30" fill="#c4ae88"/>
+          <path d="M25,27.5 C40,27 60,27 75,27.5" stroke="#a09070" stroke-width="0.65" fill="none" opacity="0.50"/>
+          <path d="M25,32.5 C40,32 60,32 75,32.5" stroke="#a09070" stroke-width="0.60" fill="none" opacity="0.44"/>
+          <path d="M25,37.5 C40,37 60,37 75,37.5" stroke="#a09070" stroke-width="0.58" fill="none" opacity="0.38"/>
+          <path d="M25,42.5 C40,42 60,42 75,42.5" stroke="#a09070" stroke-width="0.55" fill="none" opacity="0.32"/>
+          <path d="M25,47.5 C40,47 60,47 75,47.5" stroke="#a09070" stroke-width="0.50" fill="none" opacity="0.25"/>
+          <ellipse cx="50" cy="21" rx="29.5" ry="8.5" fill="#d4bc98"/>
+          <ellipse cx="50" cy="21" rx="21"   ry="6.0"  fill="#dcc8a4" opacity="0.86"/>
+          <ellipse cx="50" cy="21" rx="13.5" ry="3.8"  fill="#e4d4b0" opacity="0.80"/>
+          <ellipse cx="50" cy="21" rx="6.5"  ry="1.85" fill="#ecdcba" opacity="0.72"/>
+          <ellipse cx="20.5" cy="36" rx="7.5" ry="22" fill="#1e1008"/>
+          <ellipse cx="18.8" cy="31" rx="2.2" ry="7"  fill="#483820" opacity="0.40"/>
+          <ellipse cx="79.5" cy="36" rx="7.5" ry="22" fill="#1e1008"/>
+          <ellipse cx="77.8" cy="31" rx="2.2" ry="7"  fill="#483820" opacity="0.40"/>
         </svg>
       </div>
       <div class="topbar-title">翻页里程<span class="topbar-en">ReadMap</span></div>
