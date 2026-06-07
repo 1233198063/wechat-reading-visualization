@@ -1,0 +1,39 @@
+/* ── ReadMap Design DNA · 水墨漂浮哲学 ── */
+@import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@300;400;600;700&display=swap');
+
+:root {
+  /* Color palette — 宣纸 + 草木色系 */
+  --bg:        #f3f0e8;
+  --surface:   #faf8f3;
+  --surface2:  #ece9df;
+  --border:    #cad4c6;
+  --accent:    #6b9c72;
+  --accent2:   #4a7a54;
+  --ink:       #1e2c1c;
+  --text:      #2a3828;
+  --text-dim:  #7a907d;
+  --gold:      #a8803a;
+  --rust:      #9e5a3a;
+
+  /* Semantic */
+  --border-hair:  rgba(202,212,198,0.42);
+  --shadow:       0 6px 36px rgba(26,40,24,0.06);
+  --shadow-hover: 0 16px 56px rgba(26,40,24,0.10);
+
+  /* Typography */
+  --font-display: 'Ma Shan Zheng', 'Noto Serif SC', serif;
+  --font-body:    'Noto Serif SC', 'Source Han Serif SC', 'STSong', serif;
+
+  /* shadcn/ui radius token */
+  --radius: 0rem;
+
+  /* Motion — 水墨节奏 */
+  --ease-ink:    cubic-bezier(.25,.46,.45,.94);
+  --ease-spring: cubic-bezier(.22,1,.36,1);
+  --ease-out:    cubic-bezier(.16,1,.3,1);
+  --dur-micro:   150ms;
+  --dur-normal:  380ms;
+  --dur-slow:    650ms;
+  --dur-ink:     900ms;
+  --dur-macro:   1100ms;
+}

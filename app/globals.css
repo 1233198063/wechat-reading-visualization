@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import '../styles/design-tokens.css';
+
+@layer base {
+  html {
+    font-size: clamp(15px, 1.05vw, 20px);
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    background-color: var(--bg);
+    /* 宣纸/和纸质感 */
+    background-image:
+      url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='1400' height='1000'><filter id='p' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='0.006 0.028' numOctaves='3' seed='17' result='t'/><feColorMatrix in='t' type='saturate' values='0' result='g'/><feColorMatrix in='g' type='matrix' values='0.55 0.25 0.10 0 0.16 0.35 0.55 0.10 0 0.18 0.10 0.20 0.45 0 0.12 0 0 0 1 0' result='c'/><feComponentTransfer in='c'><feFuncA type='discrete' tableValues='0 0 0 0 0 0.02 0.04 0.06 0.07 0.08'/></feComponentTransfer></filter><rect width='100%25' height='100%25' filter='url(%23p)'/></svg>"),
+      radial-gradient(ellipse 65% 45% at 22% 28%, rgba(165,150,115,0.045) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 60% at 80% 70%, rgba(148,162,128,0.038) 0%, transparent 65%),
+      radial-gradient(ellipse 38% 35% at 58% 48%, rgba(172,162,130,0.030) 0%, transparent 60%);
+    background-size: 1400px 1000px, auto, auto, auto;
+    background-attachment: fixed;
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* 顶层微粒感 */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.016;
+    background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.62' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+}
+
+@layer utilities {
+  /* ── 关键帧 ── */
+  @keyframes inkFadeUp {
+    from { opacity: 0; transform: translateY(22px); filter: blur(2px); }
+    to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+  }
+  @keyframes inkScaleUp {
+    from { opacity: 0; transform: scale(0.96) translateY(16px); filter: blur(1px); }
+    to   { opacity: 1; transform: scale(1)    translateY(0);    filter: blur(0); }
+  }
+  @keyframes inkSlideRight {
+    from { opacity: 0; transform: translateX(-16px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes inkShelfReveal {
+    from { opacity: 0; transform: translateY(20px) scale(0.93); filter: blur(1px); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);    filter: blur(0); }
+  }
+  @keyframes sealBreath {
+    0%,100% { border-color: rgba(158,90,58,0.38); box-shadow: none; }
+    50%     { border-color: rgba(158,90,58,0.68); box-shadow: 0 0 28px rgba(158,90,58,0.13); }
+  }
+  @keyframes cardFloat {
+    from { opacity: 0; transform: translateY(32px) scale(0.975); filter: blur(3px); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);     filter: blur(0); }
+  }
+  @keyframes inkDrop {
+    0%   { box-shadow: 0 0 0 0   rgba(74,122,84,0.6), 0 0 0 0 rgba(74,122,84,0.3), 0 0 0 0 rgba(74,122,84,0.1); }
+    100% { box-shadow: 0 0 0 16px rgba(74,122,84,0),  0 0 0 30px rgba(74,122,84,0), 0 0 0 46px rgba(74,122,84,0); }
+  }
+  @keyframes shimmerSweep {
+    from { transform: translateX(-160%); }
+    to   { transform: translateX(260%); }
+  }
+
+  .animate-ink-fade-up    { animation: inkFadeUp    var(--dur-slow) var(--ease-ink) both; }
+  .animate-ink-scale-up   { animation: inkScaleUp   var(--dur-ink)  var(--ease-ink) both; }
+  .animate-ink-slide-right { animation: inkSlideRight var(--dur-slow) var(--ease-ink) both; }
+  .animate-shelf-reveal   { animation: inkShelfReveal var(--dur-slow) var(--ease-ink) both; }
+  .animate-card-float     { animation: cardFloat    var(--dur-ink)  var(--ease-ink) both; }
+  .animate-seal-breath    { animation: sealBreath   3.8s ease-in-out infinite; }
+  .animate-ink-drop       { animation: inkDrop      1.9s var(--ease-ink) infinite; }
+
+  .shimmer-bar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.58) 50%, transparent 100%);
+    transform: translateX(-160%);
+    animation: shimmerSweep 2.8s var(--ease-out) 1.6s infinite;
+    pointer-events: none;
+    z-index: 2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  body::after { display: none; }
+}
