@@ -88,9 +88,21 @@ export default function LoginCard() {
         )}
 
         <div className="text-[var(--text-dim)] text-[0.76rem] leading-[2.1] mt-5 pt-5 border-t border-[var(--border)]">
-          <b className="text-[var(--ink)] tracking-wider">使用说明：</b><br />
-          API Key 格式为 <code className="text-[var(--accent2)]">wrk-xxx</code>，仅在本地代理转发，不传至第三方。<br />
-          Key 已加密保存于浏览器，下次自动填入。
+          <b className="text-[var(--ink)] tracking-wider">如何获取 API Key：</b><br />
+          1. 打开{' '}
+          <a
+            href="https://weread.qq.com/r/weread-skills"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[var(--accent2)] underline underline-offset-2 hover:text-[var(--accent)]"
+          >
+            weread.qq.com/r/weread-skills
+          </a>
+          {' '}并登录微信读书<br />
+          2. 在「快速配置」第二步「获取 API Key」处复制 Key<br />
+          3. 粘贴到上方输入框，点击入卷<br />
+          <br />
+          <span className="opacity-70">Key 仅用于本地转发，不传至第三方，并保存于浏览器供下次自动填入。</span>
         </div>
       </div>
     </>
