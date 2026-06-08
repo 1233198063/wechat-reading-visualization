@@ -33,7 +33,7 @@ export default function StatCard({ value, label, sub, accent = '#6b9c72', color 
       style={{
         background: 'rgba(250,248,242,0.82)',
         backdropFilter: 'blur(10px)',
-        padding: 'clamp(22px,2.2vw,34px) clamp(24px,2.4vw,36px) clamp(20px,2vw,30px)',
+        padding: 'clamp(14px,2.2vw,34px) clamp(14px,2.4vw,36px) clamp(12px,2vw,30px)',
         '--card-accent': accent,
         '--card-color': color,
         animationDelay: `${animDelay}ms`,

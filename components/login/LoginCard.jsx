@@ -44,16 +44,16 @@ export default function LoginCard() {
       </p>
 
       {/* 菱形分割线 */}
-      <div className="animate-ink-fade-up flex items-center gap-3.5 mb-8 w-full"
-        style={{ maxWidth: 'clamp(380px,32vw,500px)', animationDelay: '0.58s' }}>
+      <div className="animate-ink-fade-up flex items-center gap-3.5 mb-8 w-full max-w-[500px]"
+        style={{ animationDelay: '0.58s' }}>
         <span className="flex-1 h-px bg-gradient-to-r from-transparent to-[var(--border)]" />
         <span className="w-2 h-2 bg-[var(--accent)] rotate-45 opacity-65" />
         <span className="flex-1 h-px bg-gradient-to-l from-transparent to-[var(--border)]" />
       </div>
 
       {/* 登录卡片 */}
-      <div className="animate-card-float relative border border-[var(--border)] p-[clamp(28px,2.8vw,44px)] w-full"
-        style={{ maxWidth: 'clamp(380px,32vw,500px)', background: 'var(--surface)', boxShadow: 'var(--shadow)', animationDelay: '0.55s' }}>
+      <div className="animate-card-float relative border border-[var(--border)] w-full max-w-[500px]"
+        style={{ padding: 'clamp(20px,2.8vw,44px)', background: 'var(--surface)', boxShadow: 'var(--shadow)', animationDelay: '0.55s' }}>
         {/* 四角装饰 */}
         <span className="absolute top-2.5 left-2.5 w-5 h-5 border-t-[1.5px] border-l-[1.5px] border-[var(--accent)] opacity-45" />
         <span className="absolute bottom-2.5 right-2.5 w-5 h-5 border-b-[1.5px] border-r-[1.5px] border-[var(--accent)] opacity-45" />
@@ -61,7 +61,7 @@ export default function LoginCard() {
         <label className="block text-[var(--text-dim)] text-[0.78rem] tracking-[0.18em] mb-3">
           请输入微信读书 API Key
         </label>
-        <div className="flex gap-3 mb-4">
+        <div className="flex flex-col sm:flex-row gap-3 mb-4">
           <input
             type="text"
             value={apiKey}
@@ -76,7 +76,7 @@ export default function LoginCard() {
           <button
             onClick={connect}
             disabled={loading}
-            className="px-6 py-3 rounded-full text-white text-[0.88rem] tracking-[0.2em] font-body cursor-pointer transition-all disabled:opacity-40"
+            className="sm:w-auto w-full px-6 py-3 rounded-full text-white text-[0.88rem] tracking-[0.2em] font-body cursor-pointer transition-all disabled:opacity-40"
             style={{ background: 'var(--accent2)' }}
           >
             {loading ? '连接中…' : '入卷'}

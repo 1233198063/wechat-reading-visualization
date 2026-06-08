@@ -53,8 +53,7 @@ function ShelfStatCards({ data }) {
   ];
 
   return (
-    <div className="grid gap-[clamp(12px,1.3vw,20px)] mb-[clamp(24px,2.4vw,40px)]"
-      style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(180px,16vw,260px),1fr))' }}>
+    <div className="grid grid-cols-3 gap-[clamp(10px,1.3vw,20px)] mb-[clamp(24px,2.4vw,40px)]">
       {cards.map((c, i) => <StatCard key={i} {...c} animDelay={i * 90} />)}
     </div>
   );

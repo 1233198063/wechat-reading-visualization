@@ -6,7 +6,7 @@ export default function SectionHead({ zh, en }) {
         style={{ fontSize: 'clamp(1.5rem,1.9vw,2.4rem)', letterSpacing: '0.34em', textIndent: '0.34em' }}>
         {zh}
       </span>
-      <span className="font-light text-[var(--text-dim)] self-end pb-0.5"
+      <span className="hidden sm:inline font-light text-[var(--text-dim)] self-end pb-0.5"
         style={{ fontSize: 'clamp(0.58rem,0.64vw,0.72rem)', letterSpacing: '0.38em', textIndent: '0.38em' }}>
         {en}
       </span>

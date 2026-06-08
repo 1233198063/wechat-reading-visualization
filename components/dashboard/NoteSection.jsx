@@ -1,9 +1,16 @@
 'use client';
 
+import { useState } from 'react';
 import BookCover from '@/components/common/BookCover';
 import NotesDistributionChart from '@/components/charts/NotesDistributionChart';
+import BookNotesContent from '@/components/dashboard/BookNotesContent';
+import { fetchBookmarks, fetchMyReviews } from '@/lib/api/weread';
 
 export default function NoteSection({ books }) {
+  const [expandedId, setExpandedId]   = useState(null);
+  const [notesCache, setNotesCache]   = useState({});
+  const [loadingSet, setLoadingSet]   = useState({});
+
   let total = 0, highlights = 0, reviews = 0, bookmarks = 0;
   books.forEach(b => {
     highlights += b.noteCount     || 0;
@@ -25,11 +32,30 @@ export default function NoteSection({ books }) {
     ((a.reviewCount || 0) + (a.noteCount || 0) + (a.bookmarkCount || 0))
   );
 
+  async function handleToggle(bookId) {
+    if (expandedId === bookId) { setExpandedId(null); return; }
+    setExpandedId(bookId);
+    if (notesCache[bookId]) return;
+
+    const apiKey = localStorage.getItem('wrk') || '';
+    setLoadingSet(prev => ({ ...prev, [bookId]: true }));
+    try {
+      const [bmData, reviewList] = await Promise.all([
+        fetchBookmarks(apiKey, bookId),
+        fetchMyReviews(apiKey, bookId),
+      ]);
+      setNotesCache(prev => ({ ...prev, [bookId]: { bmData, reviews: reviewList } }));
+    } catch (e) {
+      setNotesCache(prev => ({ ...prev, [bookId]: { error: e.message } }));
+    } finally {
+      setLoadingSet(prev => ({ ...prev, [bookId]: false }));
+    }
+  }
+
   return (
     <>
       {/* 概览统计 */}
-      <div className="grid gap-3.5 mb-6"
-        style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(150px,1fr))' }}>
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
         {stats.map(([v, l], i) => (
           <div key={i} className="relative text-center overflow-hidden border border-[var(--border-hair)] p-[clamp(18px,1.8vw,28px)_clamp(16px,1.6vw,24px)] transition-all duration-300 hover:-translate-y-0.5 animate-ink-fade-up"
             style={{ background: 'rgba(250,248,242,0.82)', backdropFilter: 'blur(10px)', animationDelay: `${i * 65}ms` }}>
@@ -54,27 +80,68 @@ export default function NoteSection({ books }) {
         </div>
       </div>
 
-      {/* 书籍列表 */}
+      {/* 书籍列表（可展开查看笔记内容） */}
       <div className="flex flex-col gap-2">
         {sorted.slice(0, 20).map((b, i) => {
-          const info = b.book || {};
+          const info       = b.book || {};
+          const bid        = b.bookId;
+          const isExpanded = expandedId === bid;
+          const isLoading  = !!loadingSet[bid];
+          const notes      = notesCache[bid];
+
           return (
-            <div key={i} className="flex items-center gap-3.5 border border-[var(--border-hair)] px-5 py-3.5 transition-all duration-300 hover:translate-x-1 hover:border-[rgba(107,156,114,0.38)] animate-ink-slide-right"
-              style={{ background: 'rgba(250,248,242,0.75)', animationDelay: `${i * 40}ms` }}>
-              {info.cover && (
-                <div className="flex-shrink-0 border border-[var(--border)] overflow-hidden" style={{ width: 36, height: 48 }}>
-                  <BookCover src={info.cover} alt={info.title || ''} className="w-full h-full" />
+            <div
+              key={i}
+              className="border border-[var(--border-hair)] overflow-hidden animate-ink-slide-right transition-all duration-300"
+              style={{ background: 'rgba(250,248,242,0.75)', animationDelay: `${i * 40}ms` }}
+            >
+              {/* 书籍行（可点击） */}
+              <button
+                onClick={() => handleToggle(bid)}
+                className="w-full flex items-center gap-3.5 px-5 py-3.5 text-left transition-all duration-200 hover:bg-[rgba(107,156,114,0.06)]"
+              >
+                {info.cover && (
+                  <div className="flex-shrink-0 border border-[var(--border)] overflow-hidden" style={{ width: 36, height: 48 }}>
+                    <BookCover src={info.cover} alt={info.title || ''} className="w-full h-full" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold truncate" style={{ fontSize: 'clamp(0.82rem,0.92vw,1rem)' }}>{info.title || '未知'}</div>
+                  <div className="text-[var(--text-dim)] mt-0.5" style={{ fontSize: 'clamp(0.73rem,0.8vw,0.88rem)' }}>{info.author || ''}</div>
+                </div>
+                {/* 手机：显示总数徽标 */}
+                <div className="flex sm:hidden items-center gap-2 flex-shrink-0">
+                  <span className="text-[0.70rem] font-display text-[var(--accent2)]">
+                    {(b.noteCount || 0) + (b.reviewCount || 0) + (b.bookmarkCount || 0)}
+                  </span>
+                  <span className="text-[0.58rem] text-[var(--text-dim)] select-none">
+                    {isExpanded ? '▲' : '▼'}
+                  </span>
+                </div>
+                {/* 桌面：显示三列分类计数 */}
+                <div className="hidden sm:flex items-center gap-[clamp(12px,1.2vw,20px)] flex-shrink-0">
+                  <NoteCount val={b.noteCount     || 0} label="划线" color="#4a7a54" />
+                  <NoteCount val={b.reviewCount   || 0} label="想法" color="#a8803a" />
+                  <NoteCount val={b.bookmarkCount || 0} label="书签" color="#9e5a3a" />
+                  <span className="text-[0.60rem] text-[var(--text-dim)] ml-1 w-3 text-center select-none">
+                    {isExpanded ? '▲' : '▼'}
+                  </span>
+                </div>
+              </button>
+
+              {/* 展开的笔记内容 */}
+              {isExpanded && (
+                <div className="border-t border-[var(--border-hair)] px-5">
+                  {isLoading ? (
+                    <div className="py-8 flex flex-col items-center gap-2">
+                      <div className="w-5 h-5 border-2 border-[var(--accent2)] border-t-transparent rounded-full animate-spin" />
+                      <span className="text-[0.68rem] text-[var(--text-dim)] tracking-[0.22em]">正在摘录笔记…</span>
+                    </div>
+                  ) : (
+                    <BookNotesContent bmData={notes?.bmData} reviews={notes?.reviews} error={notes?.error} />
+                  )}
                 </div>
               )}
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold truncate" style={{ fontSize: 'clamp(0.82rem,0.92vw,1rem)' }}>{info.title || '未知'}</div>
-                <div className="text-[var(--text-dim)] mt-0.5" style={{ fontSize: 'clamp(0.73rem,0.8vw,0.88rem)' }}>{info.author || ''}</div>
-              </div>
-              <div className="flex gap-[clamp(12px,1.2vw,20px)] flex-shrink-0">
-                <NoteCount val={b.noteCount     || 0} label="划线" color="#4a7a54" />
-                <NoteCount val={b.reviewCount   || 0} label="想法" color="#a8803a" />
-                <NoteCount val={b.bookmarkCount || 0} label="书签" color="#9e5a3a" />
-              </div>
             </div>
           );
         })}
