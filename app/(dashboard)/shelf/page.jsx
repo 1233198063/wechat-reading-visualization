@@ -40,7 +40,8 @@ function ShelfStatCards({ data }) {
 
   const categories = {};
   books.forEach(b => {
-    const cat = b.category || '其他';
+    const info = b.book || b;
+    const cat = info.category || b.category || '其他';
     categories[cat] = (categories[cat] || 0) + 1;
   });
   const topCat  = Object.entries(categories).sort((a, b) => b[1] - a[1])[0];

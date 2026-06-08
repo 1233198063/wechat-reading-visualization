@@ -6,9 +6,12 @@ export default function ShelfGrid({ books, albums }) {
   return (
     <div className="grid gap-[clamp(16px,1.6vw,28px)]"
       style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(110px,10vw,160px),1fr))' }}>
-      {sorted.map((b, i) => (
-        <BookTile key={b.bookId || i} title={b.title} author={b.author} cover={b.cover} finished={b.finishReading === 1} delay={i * 28} />
-      ))}
+      {sorted.map((b, i) => {
+        const info = b.book || b;
+        return (
+          <BookTile key={b.bookId || i} title={info.title} author={info.author} cover={info.cover} finished={b.finishReading === 1} delay={i * 28} />
+        );
+      })}
       {albums.map((a, i) => {
         const info = a.albumInfo || {};
         return (
